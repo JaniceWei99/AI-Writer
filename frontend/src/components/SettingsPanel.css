@@ -1,0 +1,144 @@
+.settings-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.settings-panel {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  width: 420px;
+  max-width: 90vw;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.settings-title {
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--text-h);
+}
+
+.settings-close {
+  border: none;
+  background: none;
+  font-size: 22px;
+  color: var(--text);
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.settings-close:hover {
+  color: var(--text-h);
+}
+
+.settings-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.settings-label {
+  font-size: 14px;
+  color: var(--text-h);
+  font-weight: 500;
+}
+
+.settings-input {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text-h);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.settings-input:focus {
+  border-color: var(--accent);
+}
+
+.settings-input::placeholder {
+  color: var(--text);
+  opacity: 0.5;
+}
+
+.settings-hint {
+  font-size: 12px;
+  color: var(--text);
+  opacity: 0.6;
+}
+
+.settings-slider {
+  width: 100%;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.settings-range-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text);
+  opacity: 0.5;
+}
+
+.settings-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+}
+
+.settings-btn {
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.settings-btn-reset {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+}
+
+.settings-btn-reset:hover {
+  border-color: var(--text-h);
+  color: var(--text-h);
+}
+
+.settings-btn-save {
+  border: none;
+  background: var(--accent);
+  color: #fff;
+}
+
+.settings-btn-save:hover {
+  filter: brightness(1.1);
+}

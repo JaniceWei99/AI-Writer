@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+wheels/
+.venv/
+*.db
+
+# Node
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+
+# Test caches
+.pytest_cache/
+tests/backend/__pycache__/
+
+# Test reports (generated)
+tests/reports/*.html
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Env
+.env
+.env.*
+
+# uv lock (optional, can be committed for reproducibility)
+# backend/uv.lock
