@@ -25,7 +25,6 @@
 - 复制成功/失败提示，按钮文字临时变为"已复制"/"复制失败"
 - 历史记录迁移至后端 SQLite 数据库（SQLAlchemy + aiosqlite）
 - 历史记录 CRUD API：`GET/POST/DELETE /api/history`
-- 历史记录 30 天自动过期清理（服务启动时和查询时双重过滤）
 - 后端结构化日志系统（请求方法/路径/状态码/耗时）
 - 请求日志中间件（RequestLoggingMiddleware）
 - IP 限流中间件（RateLimitMiddleware），AI 生成端点每 IP 每分钟最多 10 次

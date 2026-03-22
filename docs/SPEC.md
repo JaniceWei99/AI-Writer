@@ -243,7 +243,7 @@ response:
   200:
     body: HistoryOut[]
 behavior:
-  - 自动过滤 created_at 早于 30 天前的记录
+  - 支持关键词搜索（content / result ILIKE）
   - 按 created_at 倒序排列
   - 若 keyword 非空，模糊匹配 content 和 result
 ```

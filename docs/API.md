@@ -325,7 +325,7 @@ curl -X POST http://localhost:8000/api/writing/export-pdf \
 
 ## 7. 历史记录管理
 
-历史记录存储在后端 SQLite 数据库中，支持 CRUD 操作。记录自动保留 30 天，过期记录在服务启动时和查询时自动清理。
+历史记录存储在后端 SQLite 数据库中，支持 CRUD 操作。
 
 **路由前缀：** `/api/history`
 
@@ -333,7 +333,7 @@ curl -X POST http://localhost:8000/api/writing/export-pdf \
 
 #### `GET /api/history`
 
-按时间倒序返回历史记录列表，自动过滤 30 天前的过期记录。
+按时间倒序返回历史记录列表。
 
 ##### 请求参数（Query）
 

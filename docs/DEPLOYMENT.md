@@ -95,7 +95,6 @@ uv run uvicorn main:app --host 0.0.0.0 --port 8000
 
 启动后，后端会自动：
 - 创建 `backend/data/` 目录和 SQLite 数据库文件（`app.db`）
-- 清理 30 天前过期的历史记录
 
 可访问：
 
@@ -203,7 +202,6 @@ npm run preview
 | 默认模型名称 | `qwen3.5:9b` | `backend/services/ollama_client.py` | 可更换为其他 Ollama 支持的模型 |
 | 请求超时时间 | `120.0` 秒 | `backend/services/ollama_client.py` | 大文本处理可能需要增大 |
 | 数据库路径 | `backend/data/app.db` | `backend/db.py` | SQLite 数据库文件位置 |
-| 历史记录保留天数 | `30` 天 | `backend/routers/history.py` | `RETENTION_DAYS` 常量 |
 | 限流频率 | `10` 次/分钟 | `backend/middleware/rate_limit.py` | AI 生成端点每 IP 每分钟最大请求数 |
 
 ### 5.2 前端配置
