@@ -14,6 +14,7 @@ from prompts.writing import (
     GONGZHONGHAO_PROMPT,
     TOUTIAO_PROMPT,
     AI_DRAMA_PROMPT,
+    PPT_PROMPT,
     ATTACHMENT_SECTION,
 )
 
@@ -110,6 +111,11 @@ class TestBuildPrompt:
     def test_generate_ai_drama(self):
         result = build_prompt("generate", "霸总爱情", style="ai_drama")
         assert "短剧" in result
+
+    def test_generate_ppt(self):
+        result = build_prompt("generate", "人工智能发展趋势", style="ppt")
+        assert "演示文稿" in result
+        assert "人工智能发展趋势" in result
 
     def test_polish(self):
         result = build_prompt("polish", "这个文章需要改进")

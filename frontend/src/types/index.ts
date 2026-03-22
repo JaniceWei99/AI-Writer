@@ -45,6 +45,7 @@ export const STYLE_OPTIONS = [
   { value: 'gongzhonghao', label: '公众号文案' },
   { value: 'toutiao', label: '头条文案' },
   { value: 'ai_drama', label: 'AI短剧脚本' },
+  { value: 'ppt', label: '生成PPT' },
 ]
 
 export const LANG_OPTIONS = [

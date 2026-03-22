@@ -221,7 +221,7 @@ _add_card(slide, Inches(0.8), Inches(4.4), Inches(3.6), Inches(2.5),
 _add_card(slide, Inches(4.8), Inches(4.4), Inches(3.6), Inches(2.5),
           "后端层", [
               "路由分发 + 请求校验 (Pydantic)",
-              "提示词模板引擎 (9 种模板)",
+              "提示词模板引擎 (10 种模板)",
               "文件解析 (PDF / Word / 纯文本)",
               "Word 导出 (Markdown → .docx)",
           ], accent=GREEN)
@@ -484,6 +484,7 @@ templates = [
     ("公众号",     "GONGZHONGHAO_PROMPT", "故事切入+金句加粗",  ORANGE),
     ("头条",       "TOUTIAO_PROMPT",      "悬念标题+短段落",   PURPLE),
     ("短剧脚本",    "AI_DRAMA_PROMPT",    "场景/对白/反转",    PINK),
+    ("生成PPT",     "PPT_PROMPT",         "8-15页结构化大纲",  ACCENT),
 ]
 
 for i, (name, const, desc, color) in enumerate(templates):
@@ -560,7 +561,7 @@ summaries = [
     ("前后端分离", "FastAPI + React，职责清晰，独立部署"),
     ("本地化 LLM", "Ollama + Qwen 3.5，数据不出本机"),
     ("流式体验", "SSE 实时推送，毫秒级首字响应"),
-    ("多场景覆盖", "10 种提示词模板，从考试到自媒体"),
+    ("多场景覆盖", "11 种提示词模板，从考试到自媒体到演示文稿"),
     ("完整工具链", "上传解析 → AI 生成 → 导出 Word，端到端闭环"),
 ]
 

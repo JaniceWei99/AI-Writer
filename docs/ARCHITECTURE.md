@@ -183,6 +183,7 @@ SQLAlchemy ORM 模型 `HistoryRecord`，映射到 `history` 表：
 | `GONGZHONGHAO_PROMPT` | 微信公众号长文 | `style=gongzhonghao` |
 | `TOUTIAO_PROMPT` | 今日头条文章 | `style=toutiao` |
 | `AI_DRAMA_PROMPT` | AI 短剧脚本 | `style=ai_drama` |
+| `PPT_PROMPT` | 演示文稿大纲 | `style=ppt` |
 
 **核心函数**：
 

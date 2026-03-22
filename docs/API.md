@@ -148,6 +148,7 @@ curl -X POST http://localhost:8000/api/writing/upload \
 | `gongzhonghao` | 微信公众号风格           |
 | `toutiao`      | 今日头条风格             |
 | `ai_drama`     | AI 短剧脚本风格          |
+| `ppt`          | 生成 PPT 大纲风格        |
 
 ```json
 {

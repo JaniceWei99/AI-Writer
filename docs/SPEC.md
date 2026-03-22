@@ -30,7 +30,7 @@ TaskType = "generate" | "polish" | "translate" | "summarize"
 
 ```
 Style = "" | "literary" | "sh_gaokao"
-      | "xiaohongshu" | "gongzhonghao" | "toutiao" | "ai_drama"
+      | "xiaohongshu" | "gongzhonghao" | "toutiao" | "ai_drama" | "ppt"
 ```
 
 ```
@@ -286,6 +286,7 @@ build_prompt(task_type, content, style, target_lang, attachment_text):
     if style == "gongzhonghao":  use GONGZHONGHAO_PROMPT
     if style == "toutiao":       use TOUTIAO_PROMPT
     if style == "ai_drama":      use AI_DRAMA_PROMPT
+    if style == "ppt":           use PPT_PROMPT
     if is_poetry_request(content): use POETRY_PROMPT
     else:                        use GENERATE_PROMPT
   elif task_type == "polish":    use POLISH_PROMPT
@@ -310,6 +311,7 @@ STYLE_MAP:
   "gongzhonghao": ""  # 使用独立模板
   "toutiao":      ""  # 使用独立模板
   "ai_drama":     ""  # 使用独立模板
+  "ppt":          ""  # 使用独立模板
   "":             ""  # 默认无风格指令
 ```
 
@@ -679,6 +681,7 @@ STYLE_OPTIONS:
   - { value: "gongzhonghao",label: "公众号文案" }
   - { value: "toutiao",     label: "头条文案" }
   - { value: "ai_drama",    label: "AI短剧脚本" }
+  - { value: "ppt",         label: "生成PPT" }
 
 LANG_OPTIONS:
   - { value: "英文", label: "英文" }
@@ -758,6 +761,13 @@ LANG_OPTIONS:
 ```
 角色: 专业AI短剧编剧
 规则: 场景/角色/对白格式 / 2-3分钟时长 / 开头悬念 / 至少1个反转 / 结尾钩子 / 台词≤20字
+变量: {content}
+```
+
+### PPT_PROMPT
+```
+角色: 专业演示文稿策划师
+规则: 8-15页 / 封面+目录+内容+总结+致谢 / 每页3-5要点 / Markdown格式 / 演讲备注
 变量: {content}
 ```
 
