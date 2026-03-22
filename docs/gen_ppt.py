@@ -164,7 +164,7 @@ _add_text_box(slide, Inches(0.8), Inches(1.8), Inches(11), Inches(0.8),
 _add_card(slide, Inches(0.8), Inches(3.0), Inches(3.6), Inches(3.2),
           "核心价值", [
               "数据隐私：完全本地运行，不依赖云端 API",
-              "多场景覆盖：8 种写作风格 + 诗词创作",
+              "多场景覆盖：7 种写作风格 + 诗词创作",
               "实时体验：SSE 流式输出，逐字显示",
               "开放灵活：可更换任意 Ollama 模型",
           ], accent=ACCENT)
@@ -215,7 +215,7 @@ _add_card(slide, Inches(0.8), Inches(4.4), Inches(3.6), Inches(2.5),
               "React 组件：表单 / 结果 / 历史",
               "Axios + 原生 Fetch (SSE)",
               "Markdown 实时渲染",
-              "localStorage 历史记录",
+              "SQLite 历史记录 (后端持久化)",
           ], accent=ACCENT)
 
 _add_card(slide, Inches(4.8), Inches(4.4), Inches(3.6), Inches(2.5),
@@ -479,29 +479,30 @@ templates = [
     ("文本润色",    "POLISH_PROMPT",      "保持原意+提升质量",  ORANGE),
     ("文本翻译",    "TRANSLATE_PROMPT",   "准确+流畅+保持风格", PURPLE),
     ("文本摘要",    "SUMMARIZE_PROMPT",   "核心观点+1/3篇幅",  PINK),
-    ("小红书",     "XIAOHONGSHU_PROMPT",  "emoji标题+口语化",  ACCENT),
-    ("公众号",     "GONGZHONGHAO_PROMPT", "故事切入+金句加粗",  GREEN),
-    ("头条",       "TOUTIAO_PROMPT",      "悬念标题+短段落",   ORANGE),
-    ("短剧脚本",    "AI_DRAMA_PROMPT",    "场景/对白/反转",    PURPLE),
+    ("上海高考作文", "SH_GAOKAO_PROMPT",  "800字议论文+思辨",  ACCENT),
+    ("小红书",     "XIAOHONGSHU_PROMPT",  "emoji标题+口语化",  GREEN),
+    ("公众号",     "GONGZHONGHAO_PROMPT", "故事切入+金句加粗",  ORANGE),
+    ("头条",       "TOUTIAO_PROMPT",      "悬念标题+短段落",   PURPLE),
+    ("短剧脚本",    "AI_DRAMA_PROMPT",    "场景/对白/反转",    PINK),
 ]
 
 for i, (name, const, desc, color) in enumerate(templates):
     row = i // 3
     col = i % 3
     x = Inches(0.8) + col * Inches(4.1)
-    y = Inches(1.8) + row * Inches(1.6)
+    y = Inches(1.6) + row * Inches(1.4)
 
-    shape = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x, y, Inches(3.7), Inches(1.3))
+    shape = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x, y, Inches(3.7), Inches(1.2))
     shape.fill.solid()
     shape.fill.fore_color.rgb = CARD_BG
     shape.line.color.rgb = color
     shape.line.width = Pt(1)
 
-    _add_text_box(slide, x + Inches(0.2), y + Inches(0.1), Inches(3.3), Inches(0.35),
+    _add_text_box(slide, x + Inches(0.2), y + Inches(0.05), Inches(3.3), Inches(0.35),
                   name, font_size=16, color=color, bold=True)
-    _add_text_box(slide, x + Inches(0.2), y + Inches(0.45), Inches(3.3), Inches(0.3),
+    _add_text_box(slide, x + Inches(0.2), y + Inches(0.4), Inches(3.3), Inches(0.3),
                   const, font_size=11, color=MEDIUM_GRAY, font_name="Consolas")
-    _add_text_box(slide, x + Inches(0.2), y + Inches(0.8), Inches(3.3), Inches(0.35),
+    _add_text_box(slide, x + Inches(0.2), y + Inches(0.7), Inches(3.3), Inches(0.35),
                   desc, font_size=13, color=LIGHT_GRAY)
 
 
@@ -522,8 +523,8 @@ features = [
     ("Word 文档导出",
      'Markdown 解析 -> python-docx 生成: 标题/列表/引用/加粗/斜体 -> 内存中生成 BytesIO -> 浏览器"另存为"对话框',
      ORANGE),
-    ("历史记录搜索",
-     "localStorage 持久化 (最多 50 条) → 关键词匹配内容和结果 → 按时间倒序排列 → 一键恢复历史结果",
+    ("历史记录管理",
+     "后端 SQLite 持久化 (永久保存) → 关键词搜索内容和结果 → 按时间倒序排列 → 一键恢复历史结果",
      PURPLE),
 ]
 
@@ -559,7 +560,7 @@ summaries = [
     ("前后端分离", "FastAPI + React，职责清晰，独立部署"),
     ("本地化 LLM", "Ollama + Qwen 3.5，数据不出本机"),
     ("流式体验", "SSE 实时推送，毫秒级首字响应"),
-    ("多场景覆盖", "9 种提示词模板，从学术到自媒体"),
+    ("多场景覆盖", "10 种提示词模板，从考试到自媒体"),
     ("完整工具链", "上传解析 → AI 生成 → 导出 Word，端到端闭环"),
 ]
 
