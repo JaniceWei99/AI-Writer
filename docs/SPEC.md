@@ -58,6 +58,13 @@ ExportRequest:
   content: str                 # required, Markdown 文本
   title: str = ""
 
+ExportPptxRequest:
+  content: str                 # required, Markdown PPT 大纲
+  title: str = ""
+  template: str = "business"   # 主题模板: business | minimal | green | warm
+  with_images: bool = False    # 是否添加 Unsplash 配图
+  unsplash_key: str = ""       # Unsplash API 密钥
+
 HistoryCreate:
   task_type: str               # required
   content: str                 # required
@@ -231,6 +238,29 @@ response:
     body: { detail: "PDF 生成失败: {error}" }
 ```
 
+#### `POST /api/writing/export-pptx`
+
+```yaml
+request:
+  content_type: application/json
+  body: ExportPptxRequest
+response:
+  200:
+    content_type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+    headers:
+      Content-Disposition: "attachment; filename*=UTF-8''{url_encoded_filename}"
+    body: binary .pptx
+  500:
+    body: { detail: "PPTX 生成失败: {error}" }
+behavior:
+  - 解析 content 为幻灯片结构（标题、项目符号、演讲备注）
+  - 根据 template 参数选择主题配色方案
+  - 若 with_images == true 且 unsplash_key 非空:
+      调用 unsplash.fetch_images_for_slides() 并发获取配图
+  - 调用 pptx_export.markdown_to_pptx() 生成 PPTX
+  - 返回二进制流
+```
+
 #### `GET /api/history`
 
 ```yaml
@@ -367,6 +397,53 @@ markdown_to_docx(md_text, title=""):
     其他     → normal run
 
   返回: io.BytesIO (已 seek(0))
+```
+
+### 4.6 Markdown → PPTX 转换
+
+```yaml
+markdown_to_pptx(md_text, title="", theme="business", images={}):
+  slide_width: 13333400 EMU (宽屏 16:9)
+  slide_height: 7500950 EMU
+  default_font: "Microsoft YaHei"
+
+  主题配色:
+    business: 深蓝主色 (#1a365d), 蓝色强调 (#2b6cb0), 深灰文本 (#2d3748)
+    minimal:  深灰主色 (#2d3748), 中灰强调 (#718096), 浅灰文本 (#4a5568)
+    green:    深绿主色 (#22543d), 绿色强调 (#38a169), 深灰文本 (#2d3748)
+    warm:     深棕主色 (#7b341e), 橙色强调 (#dd6b20), 深灰文本 (#2d3748)
+
+  解析规则:
+    /^##\s+(.*)/        → 新建幻灯片, 设置标题
+    /^[-*+]\s+(.*)/     → 项目符号要点
+    /^\d+\.\s+(.*)/     → 有序列表要点
+    /^>\s*(.*)/         → 演讲备注 (移除 "备注:" / "演讲备注:" 前缀)
+    /^---$/             → 幻灯片分隔符 (无标题时)
+
+  幻灯片类型:
+    封面 (index == 0):    居中标题 + 副标题 + 装饰线
+    结束页 (含 "谢谢"|"致谢"|"Q&A"|"感谢"): 居中大字
+    内容页:               标题 + 项目符号 + 可选右侧图片
+
+  返回: io.BytesIO (已 seek(0))
+```
+
+### 4.7 Unsplash 图片获取
+
+```yaml
+search_image(query, api_key, width=800, height=600):
+  清理 query: 移除数字前缀、Markdown 格式、标点符号
+  GET https://api.unsplash.com/search/photos
+    headers: { Authorization: "Client-ID {api_key}" }
+    params: { query, per_page: 1, orientation: "landscape" }
+  timeout: 10s
+  返回: 图片 bytes | None
+
+fetch_images_for_slides(slides, api_key):
+  跳过封面和结束页
+  并发 asyncio.gather() 获取所有内容页图片
+  返回: dict[int, bytes]  # 幻灯片索引 → 图片数据
+  无 API Key → 返回空 dict
 ```
 
 ---
@@ -538,7 +615,10 @@ result_panel:
     - "复制结果" → navigator.clipboard.writeText(result), 临时变为"已复制"/"复制失败"
     - "换一个" → onRegenerate()
     - "编辑" → 进入编辑模式
-    - "下载 Word" / "下载 PDF" / "下载 TXT" / "下载 MD"
+    - "下载 Word" / "下载 PDF" / "下载 TXT" / "下载 MD" / "下载 PPT"
+    - PPT 选项面板 (仅 style === "ppt" 时显示):
+        - 主题选择器: PPT_THEME_OPTIONS (4 个选项)
+        - 配图复选框 (仅设置了 Unsplash Key 时显示)
     - exportMsg 提示 (成功绿色 / 失败红色, 3 秒后消失)
 
 handleExport:
@@ -621,6 +701,12 @@ functions:
     2. POST /api/writing/export-docx, responseType: blob
     3. 若有 fileHandle → createWritable() + write(blob) + close()
     4. 否则 → Blob URL + <a>.click() 下载
+
+  downloadPptx(content, title="", template="business", withImages=false, unsplashKey="") → void:
+    1. POST /api/writing/export-pptx, responseType: blob
+       - timeout: withImages ? 300000 : 120000
+       - body: { content, title, template, with_images, unsplash_key }
+    2. Blob URL + <a>.click() 下载
 ```
 
 ### 7.2 history.ts
@@ -690,6 +776,12 @@ LANG_OPTIONS:
   - { value: "韩文", label: "韩文" }
   - { value: "法文", label: "法文" }
   - { value: "德文", label: "德文" }
+
+PPT_THEME_OPTIONS:
+  - { value: "business", label: "商务蓝" }
+  - { value: "minimal",  label: "极简灰" }
+  - { value: "green",    label: "清新绿" }
+  - { value: "warm",     label: "暖色调" }
 ```
 
 ---
@@ -795,6 +887,7 @@ dependencies:
   - pypdf2 >= 3.0.1
   - python-docx >= 1.2.0
   - python-multipart >= 0.0.22
+  - python-pptx >= 1.0.2
   - uvicorn >= 0.42.0
   - sqlalchemy >= 2.0
   - aiosqlite >= 0.20
@@ -844,6 +937,8 @@ devDependencies:
   - file_parser: ValueError (不支持的类型/超大小), 其他异常上抛
   - docx_export: 异常上抛
   - pdf_export: 异常上抛
+  - pptx_export: 异常上抛
+  - unsplash: 无 API Key 返回空结果, httpx 异常返回 None, 不中断 PPTX 生成
   - history router: 标准 CRUD, 404 不处理 (DELETE 幂等)
 ```
 

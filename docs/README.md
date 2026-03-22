@@ -4,7 +4,7 @@
 
 **AI 写作助手** 是一个基于大语言模型（LLM）的智能写作辅助工具，采用前后端分离架构开发。后端使用 Python FastAPI 框架，前端使用 React + TypeScript + Vite 构建，通过 Ollama 本地部署的大模型提供 AI 能力。
 
-本项目支持文章生成、文本润色、文本翻译、文本摘要、附件上传解析、多格式结果导出（Word/TXT/Markdown/PDF）、流式生成输出、历史记录数据库持久化、深色模式、模型参数设置、Prompt 模板管理等功能，旨在为用户提供高效、便捷的 AI 写作体验。
+本项目支持文章生成、文本润色、文本翻译、文本摘要、附件上传解析、多格式结果导出（Word/TXT/Markdown/PDF/PPTX）、流式生成输出、历史记录数据库持久化、深色模式、模型参数设置、Prompt 模板管理等功能，旨在为用户提供高效、便捷的 AI 写作体验。
 
 ---
 
@@ -22,6 +22,7 @@
 | SQLAlchemy + aiosqlite | 异步 ORM 与 SQLite 数据库 |
 | python-docx | Word 文档生成与导出 |
 | fpdf2 | PDF 文档生成与导出 |
+| python-pptx | PowerPoint 演示文稿生成与导出 |
 | PyPDF2 | PDF 文件解析 |
 | python-multipart | 文件上传支持 |
 | uv | 依赖管理工具 |
@@ -86,6 +87,7 @@
 - **纯文本（.txt）**：客户端直接生成下载
 - **Markdown（.md）**：客户端直接生成下载
 - **PDF（.pdf）**：后端使用 fpdf2 生成，支持中文
+- **PPT（.pptx）**：后端使用 python-pptx 生成，支持 4 种主题模板和可选 Unsplash 配图
 
 ### 7. 流式生成
 
@@ -207,7 +209,9 @@ my_first/
 │   │   ├── ollama_client.py    # Ollama API 调用客户端
 │   │   ├── file_parser.py      # 附件文件解析服务
 │   │   ├── docx_export.py      # Word 文档导出服务
-│   │   └── pdf_export.py       # PDF 文档导出服务
+│   │   ├── pdf_export.py       # PDF 文档导出服务
+│   │   ├── pptx_export.py      # PPT 演示文稿导出服务
+│   │   └── unsplash.py         # Unsplash 图片搜索服务（PPT 配图）
 │   ├── prompts/
 │   │   └── writing.py          # 写作提示词模板
 │   ├── data/                   # SQLite 数据库文件目录
@@ -224,7 +228,7 @@ my_first/
 │       │   ├── SettingsPanel.tsx# 模型/参数设置面板
 │       │   └── ConfirmDialog.tsx# 确认对话框组件
 │       ├── services/
-│       │   ├── api.ts          # API 请求函数（含多格式导出）
+│       │   ├── api.ts          # API 请求函数（含多格式导出及 PPTX 导出）
 │       │   ├── history.ts      # 后端历史记录 API 客户端
 │       │   └── templates.ts    # Prompt 模板管理
 │       └── types/

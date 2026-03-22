@@ -203,6 +203,7 @@ npm run preview
 | 请求超时时间 | `120.0` 秒 | `backend/services/ollama_client.py` | 大文本处理可能需要增大 |
 | 数据库路径 | `backend/data/app.db` | `backend/db.py` | SQLite 数据库文件位置 |
 | 限流频率 | `10` 次/分钟 | `backend/middleware/rate_limit.py` | AI 生成端点每 IP 每分钟最大请求数 |
+| Unsplash API Key | 无（可选） | 前端设置面板 | PPT 导出配图功能所需，在 [Unsplash Developers](https://unsplash.com/developers) 申请 |
 
 ### 5.2 前端配置
 

@@ -5,6 +5,18 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.2.0] - 2026-03-22
+
+### 新增
+
+- PPT 导出功能：将 AI 生成的 PPT 大纲导出为 `.pptx` 文件
+- 4 种 PPT 主题模板：商务蓝（business）、极简灰（minimal）、清新绿（green）、暖色调（warm）
+- 可选 Unsplash 配图：为 PPT 幻灯片自动获取相关图片
+- 后端端点 `POST /api/writing/export-pptx`（基于 python-pptx）
+- 前端 PPT 导出选项：主题选择器、配图开关
+- 设置面板新增 Unsplash Access Key 输入
+- PPT 导出单元测试和集成测试（22 个新测试用例）
+
 ## [1.1.0] - 2026-03-22
 
 ### 新增
@@ -55,5 +67,6 @@
 - 修复 Word 导出文件内容为空：Content-Disposition header 中的中文文件名未做 URL 编码导致 latin-1 编码失败返回 500
 - 修复 showSaveFilePicker 弹窗不显示：将弹窗调用移至 await 请求之前，确保在用户手势上下文中执行
 
+[1.2.0]: https://github.com/USERNAME/REPO/releases/tag/v1.2.0
 [1.1.0]: https://github.com/USERNAME/REPO/releases/tag/v1.1.0
 [1.0.0]: https://github.com/USERNAME/REPO/releases/tag/v1.0.0

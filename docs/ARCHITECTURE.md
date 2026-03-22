@@ -49,11 +49,14 @@ my_first/
 │   │   ├── ollama_client.py     # Ollama HTTP 客户端（generate / generate_stream，支持自定义 model/temperature）
 │   │   ├── file_parser.py       # 文件文本提取（PDF / DOCX / 纯文本）
 │   │   ├── docx_export.py       # Markdown → Word 文档转换
-│   │   └── pdf_export.py        # Markdown → PDF 文档转换（fpdf2，中文字体支持）
+│   │   ├── pdf_export.py        # Markdown → PDF 文档转换（fpdf2，中文字体支持）
+│   │   ├── pptx_export.py       # Markdown → PPTX 演示文稿转换（python-pptx，4 种主题模板）
+│   │   └── unsplash.py          # Unsplash 图片搜索服务（为 PPT 幻灯片获取配图）
 │   └── tests/
 │       ├── test_routers.py      # 路由接口测试
 │       ├── test_file_parser.py  # 文件解析测试
 │       ├── test_prompts.py      # 提示词构建测试
+│       ├── test_pptx_export.py  # PPTX 导出测试
 │       └── test_schemas.py      # 数据模型测试
 ├── frontend/
 │   └── src/
@@ -85,7 +88,7 @@ my_first/
 
 ### `main.py` — 应用入口
 
-- 创建 FastAPI 实例（标题 `AI 写作助手`，版本 `1.1.0`）
+- 创建 FastAPI 实例（标题 `AI 写作助手`，版本 `1.2.0`）
 - 使用 `lifespan` 上下文管理器，在启动时初始化数据库（`init_db()`）
 - 配置 CORS 中间件，允许前端开发服务器跨域请求：
   - `http://localhost:5173`（Vite 开发服务器）
@@ -114,6 +117,7 @@ my_first/
 | `WritingRequest` | 写作请求体：`task_type`、`content`、`style`、`target_lang`、`attachment_text`、`model`（可选）、`temperature`（可选） |
 | `WritingResponse` | 写作响应体：`task_type`、`result`（生成文本）、`token_count`（token 计数） |
 | `ExportRequest` | 导出请求体：`content`（Markdown 内容）、`title`（文档标题） |
+| `ExportPptxRequest` | PPTX 导出请求体：`content`、`title`、`template`（主题模板）、`with_images`（是否配图）、`unsplash_key` |
 | `HistoryCreate` | 历史记录创建请求：`task_type`、`content`、`result`、`style`、`token_count` |
 | `HistoryOut` | 历史记录响应：含 `id`、`created_at` 等完整字段 |
 
@@ -133,7 +137,7 @@ SQLAlchemy ORM 模型 `HistoryRecord`，映射到 `history` 表：
 
 ### `routers/writing.py` — 写作 API 路由
 
-提供五个核心端点，统一前缀 `/api/writing`：
+提供六个核心端点，统一前缀 `/api/writing`：
 
 | 端点 | 方法 | 功能 |
 |------|------|------|
@@ -142,6 +146,7 @@ SQLAlchemy ORM 模型 `HistoryRecord`，映射到 `history` 表：
 | `/stream` | POST | 流式写作处理，以 SSE 格式逐 token 返回。诗词请求走特殊路径 |
 | `/export-docx` | POST | 接收 Markdown 文本，转换为 Word 文档，以二进制流返回 |
 | `/export-pdf` | POST | 接收 Markdown 文本，转换为 PDF 文档（fpdf2，中文支持），以二进制流返回 |
+| `/export-pptx` | POST | 接收 Markdown PPT 大纲，转换为 PPTX 演示文稿（支持主题模板和 Unsplash 配图），以二进制流返回 |
 
 ### `routers/history.py` — 历史记录路由
 
@@ -236,6 +241,30 @@ SQLAlchemy ORM 模型 `HistoryRecord`，映射到 `history` 表：
 - 解析 Markdown 标题、列表、引用、分隔线等元素
 - 返回 `io.BytesIO` 字节流
 
+### `services/pptx_export.py` — PPTX 演示文稿导出
+
+将 Markdown PPT 大纲转换为 `.pptx` 文件（内存中生成），基于 python-pptx：
+
+- **Markdown 解析**：识别 `## 标题`（幻灯片标题）、`- 项目符号`、`> 演讲备注`、`---`（分隔符）
+- **幻灯片类型**：自动区分封面、内容页、结束页（检测"谢谢"、"致谢"、"Q&A"等关键词）
+- **4 种主题模板**：
+  - `business`（商务蓝）— 默认
+  - `minimal`（极简灰）
+  - `green`（清新绿）
+  - `warm`（暖色调）
+- **图片支持**：可为内容幻灯片添加配图（右侧布局），图片由 Unsplash 服务提供
+- **演讲备注**：嵌入到每张幻灯片的备注区域
+- **幻灯片编号**：自动添加页码
+
+### `services/unsplash.py` — Unsplash 图片搜索
+
+为 PPT 幻灯片提供自动配图能力，通过 Unsplash API 搜索相关图片：
+
+- `search_image(query, api_key)` — 搜索单张图片，自动清理标题中的 Markdown 格式
+- `fetch_images_for_slides(slides, api_key)` — 并发获取多张图片（`asyncio.gather`）
+- 无 API 密钥时优雅返回空结果，不影响 PPTX 生成
+- 请求超时：10 秒
+
 ---
 
 ## 前端模块说明
@@ -282,7 +311,7 @@ SQLAlchemy ORM 模型 `HistoryRecord`，映射到 `history` 表：
 - **结果编辑**：支持编辑/保存/取消，在导出前修改生成内容
 - **对比视图**：润色/翻译任务左右对比原文与生成结果
 - **一键复制**：成功/失败提示，按钮文字临时变为"已复制"/"复制失败"
-- **多格式导出**：Word（.docx）、PDF（.pdf）、纯文本（.txt）、Markdown（.md）
+- **多格式导出**：Word（.docx）、PDF（.pdf）、PPT（.pptx）、纯文本（.txt）、Markdown（.md）
 - **"换一个"按钮**：用相同参数重新生成不同结果
 - **"重新尝试"按钮**：请求失败后显示
 - 显示 token 计数、加载状态
@@ -303,6 +332,7 @@ SQLAlchemy ORM 模型 `HistoryRecord`，映射到 `history` 表：
 
 - 模型名称输入框（自定义 Ollama 模型）
 - 温度参数滑块（0-2，步长 0.1）
+- Unsplash Access Key 输入框（用于 PPT 配图，密码类型保护隐私）
 - 设置值通过 props 回传到 App 组件
 
 ### `services/api.ts` — API 客户端
@@ -317,6 +347,7 @@ SQLAlchemy ORM 模型 `HistoryRecord`，映射到 `history` 表：
 | `uploadFile(file)` | 文件上传 |
 | `downloadDocx(content, title)` | 导出 Word，优先使用 File System Access API |
 | `downloadPdf(content, title)` | 导出 PDF，优先使用 File System Access API |
+| `downloadPptx(content, title, template, withImages, unsplashKey)` | 导出 PPTX，支持主题模板和 Unsplash 配图，配图时超时 300 秒 |
 
 > **注意**：`streamWriting` 使用原生 `fetch()` 而非 Axios，因为 Axios 不支持流式读取响应体。
 
@@ -397,6 +428,35 @@ SQLAlchemy ORM 模型 `HistoryRecord`，映射到 `history` 表：
         Access API     回退下载
 ```
 
+### PPTX 导出流程
+
+```
+用户选择"生成PPT"风格 → AI 生成 Markdown PPT 大纲
+                              │
+                    用户点击"导出 PPT"
+                              │
+                   ┌──────────┴──────────┐
+                   │                     │
+             选择主题模板          是否启用配图？
+          (business/minimal/       │
+           green/warm)        ┌────┴────┐
+                              │         │
+                             否         是
+                              │    Unsplash API
+                              │    并发获取图片
+                              │         │
+                   └──────────┴─────────┘
+                              │
+                  POST /api/writing/export-pptx
+                              │
+                   pptx_export.py 内存中转换
+                  (解析大纲 → 生成幻灯片 → 嵌入图片)
+                              │
+                     返回 .pptx 二进制流
+                              │
+                        Blob URL 下载
+```
+
 ---
 
 ## 关键设计决策
@@ -432,3 +492,7 @@ SQLAlchemy ORM 模型 `HistoryRecord`，映射到 `history` 表：
 ### 8. 深色模式实现
 
 使用 CSS 自定义属性（CSS Variables）实现主题切换，通过 `data-theme` 属性控制。三态循环：跟随系统 → 亮色 → 暗色，偏好设置持久化到 localStorage。
+
+### 9. PPTX 导出策略
+
+后端在内存中生成 `.pptx` 文件，不写入磁盘。采用 Markdown 大纲格式作为中间表示，解析为结构化幻灯片数据后再生成演示文稿。4 种预置主题通过颜色方案和字体配置区分，支持自动识别封面、内容页和结束页。Unsplash 配图为可选功能，无 API Key 时不影响基本导出。
