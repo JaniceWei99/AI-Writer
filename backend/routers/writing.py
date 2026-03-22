@@ -5,12 +5,13 @@ from urllib.parse import quote
 
 from fastapi import APIRouter, File, UploadFile, HTTPException
 from fastapi.responses import StreamingResponse
-from models.schemas import WritingRequest, WritingResponse, ExportRequest
+from models.schemas import WritingRequest, WritingResponse, ExportRequest, ExportPptxRequest
 from prompts.writing import build_prompt, is_poetry_request, validate_poetry
 from services.ollama_client import generate, generate_stream, DEFAULT_MODEL
 from services.file_parser import extract_text
 from services.docx_export import markdown_to_docx
 from services.pdf_export import markdown_to_pdf
+from services.pptx_export import markdown_to_pptx, _parse_slides
 
 router = APIRouter(prefix="/api/writing", tags=["writing"])
 logger = logging.getLogger("app.writing")
@@ -138,3 +139,38 @@ async def export_pdf(req: ExportRequest):
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"PDF 生成失败: {str(e)}")
+
+
+@router.post("/export-pptx")
+async def export_pptx(req: ExportPptxRequest):
+    """将 Markdown PPT 大纲导出为 PowerPoint 文件。"""
+    try:
+        images: dict[int, bytes] = {}
+
+        if req.with_images:
+            from services.unsplash import fetch_images_for_slides
+            slides_data = _parse_slides(req.content)
+            # Only fetch images for content slides (skip cover=0 and end)
+            titles = [sd.title for sd in slides_data]
+            # Skip first slide (cover) and last slide (thanks/Q&A)
+            content_indices = list(range(1, max(len(titles) - 1, 1)))
+            content_titles = [titles[j] for j in content_indices if j < len(titles)]
+            if content_titles:
+                raw_images = await fetch_images_for_slides(
+                    content_titles,
+                    access_key=req.unsplash_key,
+                )
+                # Map back to original slide indices
+                for local_idx, img_bytes in raw_images.items():
+                    images[content_indices[local_idx]] = img_bytes
+
+        buf = markdown_to_pptx(req.content, req.title, template=req.template, images=images)
+        filename = (req.title or "演示文稿") + ".pptx"
+        encoded = quote(filename)
+        return StreamingResponse(
+            buf,
+            media_type="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            headers={"Content-Disposition": f"attachment; filename*=UTF-8''{encoded}"},
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"PPT 生成失败: {str(e)}")

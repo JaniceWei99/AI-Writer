@@ -35,3 +35,11 @@ class WritingResponse(BaseModel):
 class ExportRequest(BaseModel):
     content: str
     title: str = ""
+
+
+class ExportPptxRequest(BaseModel):
+    content: str
+    title: str = ""
+    template: str = "business"
+    with_images: bool = False
+    unsplash_key: str = ""

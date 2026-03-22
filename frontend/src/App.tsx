@@ -43,6 +43,7 @@ function App() {
   // Compare view: track the original content for polish/translate
   const [originalContent, setOriginalContent] = useState('')
   const [lastTaskType, setLastTaskType] = useState('')
+  const [lastStyle, setLastStyle] = useState('')
 
   // Sidebar collapse (mobile)
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -91,6 +92,7 @@ function App() {
     lastReqRef.current = fullReq
     setOriginalContent(req.content)
     setLastTaskType(req.task_type)
+    setLastStyle(req.style)
 
     let fullText = ''
     let count = 0
@@ -241,6 +243,8 @@ function App() {
             onResultChange={handleResultChange}
             originalContent={originalContent}
             taskType={lastTaskType}
+            style={lastStyle}
+            unsplashKey={settings.unsplashKey}
           />
         </main>
       </div>

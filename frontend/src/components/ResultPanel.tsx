@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import Markdown from 'react-markdown'
-import { downloadDocx, downloadTxt, downloadMd, downloadPdf } from '../services/api'
-import { TaskType } from '../types'
+import { downloadDocx, downloadTxt, downloadMd, downloadPdf, downloadPptx } from '../services/api'
+import { TaskType, PPT_TEMPLATE_OPTIONS } from '../types'
 import './ResultPanel.css'
 
 interface Props {
@@ -14,12 +14,14 @@ interface Props {
   onResultChange?: (text: string) => void
   originalContent?: string
   taskType?: string
+  style?: string
+  unsplashKey?: string
 }
 
 export default function ResultPanel({
   result, loading, tokenCount, error,
   onRegenerate, onRetry, onResultChange,
-  originalContent, taskType,
+  originalContent, taskType, style, unsplashKey,
 }: Props) {
   const [exporting, setExporting] = useState(false)
   const [exportMsg, setExportMsg] = useState('')
@@ -28,6 +30,8 @@ export default function ResultPanel({
   const [showExportMenu, setShowExportMenu] = useState(false)
   const [copyMsg, setCopyMsg] = useState('')
   const [showCompare, setShowCompare] = useState(false)
+  const [pptTemplate, setPptTemplate] = useState('business')
+  const [pptWithImages, setPptWithImages] = useState(false)
 
   const canCompare = !loading && result && originalContent &&
     (taskType === TaskType.POLISH || taskType === TaskType.TRANSLATE)
@@ -71,7 +75,7 @@ export default function ResultPanel({
     }
   }
 
-  const handleExport = async (format: 'docx' | 'txt' | 'md' | 'pdf') => {
+  const handleExport = async (format: 'docx' | 'txt' | 'md' | 'pdf' | 'pptx') => {
     setExporting(true)
     setExportMsg('')
     setShowExportMenu(false)
@@ -81,6 +85,7 @@ export default function ResultPanel({
         case 'txt':  downloadTxt(currentContent); break
         case 'md':   downloadMd(currentContent); break
         case 'pdf':  await downloadPdf(currentContent); break
+        case 'pptx': await downloadPptx(currentContent, '', pptTemplate, pptWithImages, unsplashKey || ''); break
       }
       setExportMsg('下载成功')
       setTimeout(() => setExportMsg(''), 3000)
@@ -193,9 +198,34 @@ export default function ResultPanel({
                 <button onClick={() => handleExport('txt')}>纯文本 (.txt)</button>
                 <button onClick={() => handleExport('md')}>Markdown (.md)</button>
                 <button onClick={() => handleExport('pdf')}>PDF (.pdf)</button>
+                <button onClick={() => handleExport('pptx')}>PPT (.pptx)</button>
               </div>
             )}
           </div>
+
+          {style === 'ppt' && (
+            <div className="ppt-options">
+              <select
+                className="ppt-template-select"
+                value={pptTemplate}
+                onChange={(e) => setPptTemplate(e.target.value)}
+              >
+                {PPT_TEMPLATE_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+              {unsplashKey && (
+                <label className="ppt-image-toggle">
+                  <input
+                    type="checkbox"
+                    checked={pptWithImages}
+                    onChange={(e) => setPptWithImages(e.target.checked)}
+                  />
+                  <span>配图</span>
+                </label>
+              )}
+            </div>
+          )}
 
           {onRegenerate && (
             <button className="btn btn-regenerate" onClick={onRegenerate}>换一个</button>

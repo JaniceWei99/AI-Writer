@@ -4,10 +4,11 @@ import './SettingsPanel.css'
 export interface AppSettings {
   model: string
   temperature: number
+  unsplashKey: string
 }
 
 const STORAGE_KEY = 'writing_settings'
-const DEFAULTS: AppSettings = { model: '', temperature: 0.7 }
+const DEFAULTS: AppSettings = { model: '', temperature: 0.7, unsplashKey: '' }
 
 export function loadSettings(): AppSettings {
   try {
@@ -32,15 +33,17 @@ interface Props {
 export default function SettingsPanel({ settings, onSave, onClose }: Props) {
   const [model, setModel] = useState(settings.model)
   const [temperature, setTemperature] = useState(settings.temperature)
+  const [unsplashKey, setUnsplashKey] = useState(settings.unsplashKey)
 
   const handleSave = () => {
-    onSave({ model, temperature })
+    onSave({ model, temperature, unsplashKey })
     onClose()
   }
 
   const handleReset = () => {
     setModel(DEFAULTS.model)
     setTemperature(DEFAULTS.temperature)
+    setUnsplashKey(DEFAULTS.unsplashKey)
   }
 
   return (
@@ -81,6 +84,20 @@ export default function SettingsPanel({ settings, onSave, onClose }: Props) {
               <span>0 (precise)</span>
               <span>2 (creative)</span>
             </div>
+          </label>
+
+          <label className="settings-field">
+            <span className="settings-label">Unsplash Access Key</span>
+            <input
+              type="password"
+              value={unsplashKey}
+              onChange={(e) => setUnsplashKey(e.target.value)}
+              placeholder="PPT 配图用，留空则不配图"
+              className="settings-input"
+            />
+            <span className="settings-hint">
+              免费获取：<a href="https://unsplash.com/developers" target="_blank" rel="noreferrer">unsplash.com/developers</a>
+            </span>
           </label>
         </div>
 

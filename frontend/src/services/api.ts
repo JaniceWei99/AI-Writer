@@ -157,3 +157,27 @@ export async function downloadPdf(content: string, title: string = ''): Promise<
   a.click()
   URL.revokeObjectURL(url)
 }
+
+export async function downloadPptx(
+  content: string,
+  title: string = '',
+  template: string = 'business',
+  withImages: boolean = false,
+  unsplashKey: string = '',
+): Promise<void> {
+  const defaultName = (title || '演示文稿') + '.pptx'
+  const { data } = await api.post('/api/writing/export-pptx', {
+    content, title, template,
+    with_images: withImages,
+    unsplash_key: unsplashKey,
+  }, {
+    responseType: 'blob',
+    timeout: withImages ? 300_000 : 120_000,  // longer timeout when fetching images
+  })
+  const url = URL.createObjectURL(data)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = defaultName
+  a.click()
+  URL.revokeObjectURL(url)
+}

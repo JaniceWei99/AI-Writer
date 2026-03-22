@@ -386,3 +386,40 @@
     flex-direction: column;
   }
 }
+
+/* PPT 模板选择器 */
+.ppt-options {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ppt-template-select {
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.ppt-template-select:hover {
+  border-color: var(--accent);
+}
+
+.ppt-image-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  user-select: none;
+}
+
+.ppt-image-toggle input[type="checkbox"] {
+  accent-color: var(--accent);
+  cursor: pointer;
+}

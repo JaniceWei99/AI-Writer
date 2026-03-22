@@ -187,3 +187,48 @@ class TestStream:
         assert resp.status_code == 200
         assert "text/event-stream" in resp.headers["content-type"]
         assert "[DONE]" in resp.text
+
+
+# ── Export PPTX ──────────────────────────────────────────────────────
+
+
+class TestExportPptx:
+    def test_export_pptx_basic(self, client: TestClient):
+        md = "## Slide One\n- Bullet A\n---\n## Slide Two\n- Bullet B"
+        resp = client.post("/api/writing/export-pptx", json={
+            "content": md,
+            "title": "Test PPT",
+            "template": "business",
+        })
+        assert resp.status_code == 200
+        assert "presentationml.presentation" in resp.headers["content-type"]
+        assert len(resp.content) > 0
+
+    def test_export_pptx_default_template(self, client: TestClient):
+        resp = client.post("/api/writing/export-pptx", json={
+            "content": "## Hello\n- World",
+        })
+        assert resp.status_code == 200
+
+    def test_export_pptx_all_templates(self, client: TestClient):
+        for template in ("business", "minimal", "green", "warm"):
+            resp = client.post("/api/writing/export-pptx", json={
+                "content": "## Slide\n- Bullet",
+                "template": template,
+            })
+            assert resp.status_code == 200
+
+    def test_export_pptx_empty_content(self, client: TestClient):
+        resp = client.post("/api/writing/export-pptx", json={
+            "content": "",
+            "title": "Empty",
+        })
+        assert resp.status_code == 200
+
+    def test_export_pptx_filename_header(self, client: TestClient):
+        resp = client.post("/api/writing/export-pptx", json={
+            "content": "## Slide\n- Bullet",
+            "title": "我的演示",
+        })
+        assert resp.status_code == 200
+        assert "Content-Disposition" in resp.headers

@@ -57,6 +57,13 @@ export const LANG_OPTIONS = [
   { value: '德文', label: '德文' },
 ]
 
+export const PPT_TEMPLATE_OPTIONS = [
+  { value: 'business', label: '商务蓝' },
+  { value: 'minimal', label: '简约白' },
+  { value: 'green', label: '清新绿' },
+  { value: 'warm', label: '暖色调' },
+]
+
 export interface HistoryItem {
   id: string
   task_type: TaskType
