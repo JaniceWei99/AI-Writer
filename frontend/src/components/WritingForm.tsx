@@ -23,7 +23,7 @@ interface Props {
 
 const ACCEPT_TYPES = '.pdf,.docx,.doc,.pptx,.ppt,.txt,.md,.csv,.json,.xml,.html,.htm'
 
-export default function WritingForm({ onSubmit, loading, onStop, online, unsplashKey }: Props) {
+export default function WritingForm({ onSubmit, loading, onStop, online, unsplashKey: _unsplashKey }: Props) {
   const [mode, setMode] = useState<ContentMode>('text')
   const [taskType, setTaskType] = useState<TaskType>(TaskType.GENERATE)
   const [content, setContent] = useState('')

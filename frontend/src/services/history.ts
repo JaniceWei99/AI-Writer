@@ -2,7 +2,7 @@ import axios from 'axios'
 import type { HistoryItem } from '../types'
 
 const api = axios.create({
-  baseURL: 'http://localhost:8000',
+  baseURL: import.meta.env.VITE_API_BASE || '',
   timeout: 10_000,
 })
 

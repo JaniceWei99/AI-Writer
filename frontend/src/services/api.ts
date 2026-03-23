@@ -1,8 +1,10 @@
 import axios from 'axios'
 import type { WritingRequest, WritingResponse } from '../types'
 
+const API_BASE = import.meta.env.VITE_API_BASE || ''
+
 const api = axios.create({
-  baseURL: 'http://localhost:8000',
+  baseURL: API_BASE,
   timeout: 120_000,
 })
 
@@ -19,7 +21,7 @@ export async function streamWriting(
 ): Promise<AbortController> {
   const controller = new AbortController()
 
-  fetch('http://localhost:8000/api/writing/stream', {
+  fetch(`${API_BASE}/api/writing/stream`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(req),

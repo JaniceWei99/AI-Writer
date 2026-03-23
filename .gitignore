@@ -39,6 +39,7 @@ npm-debug.log*
 # Env
 .env
 .env.*
+!.env.development
 
 # uv lock (optional, can be committed for reproducibility)
 # backend/uv.lock
