@@ -11,7 +11,7 @@ Expected input format (from PPT_PROMPT):
     ---
 
 Supported layouts: bullets (default), stats, comparison, timeline,
-quote, grid, image-text.
+quote, grid.
 """
 
 import io
