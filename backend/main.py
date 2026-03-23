@@ -13,14 +13,14 @@ logger = setup_logging()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Starting AI 写作助手 v1.1.0")
+    logger.info("Starting AI 写作助手 v1.3.1")
     await init_db()
     logger.info("Database ready")
     yield
     logger.info("Shutting down")
 
 
-app = FastAPI(title="AI 写作助手", version="1.1.0", lifespan=lifespan)
+app = FastAPI(title="AI 写作助手", version="1.3.1", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

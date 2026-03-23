@@ -88,7 +88,7 @@ my_first/
 
 ### `main.py` — 应用入口
 
-- 创建 FastAPI 实例（标题 `AI 写作助手`，版本 `1.2.0`）
+- 创建 FastAPI 实例（标题 `AI 写作助手`，版本 `1.3.1`）
 - 使用 `lifespan` 上下文管理器，在启动时初始化数据库（`init_db()`）
 - 配置 CORS 中间件，允许前端开发服务器跨域请求：
   - `http://localhost:5173`（Vite 开发服务器）
