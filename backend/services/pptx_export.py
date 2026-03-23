@@ -1,13 +1,17 @@
 """Convert AI-generated Markdown PPT outline to a .pptx file in memory.
 
-Enhanced with decorative design elements for professional presentation style.
+Enhanced with multiple layout types and decorative design elements
+for professional presentation style.
 
 Expected input format (from PPT_PROMPT):
-    ## 1. Slide Title
+    ## 1. Slide Title [layout: bullets]
     - Bullet one
     - Bullet two
     > Speaker notes here
     ---
+
+Supported layouts: bullets (default), stats, comparison, timeline,
+quote, grid, image-text.
 """
 
 import io
@@ -88,6 +92,9 @@ THEMES: dict[str, PptTheme] = {
 
 DEFAULT_TEMPLATE = "business"
 
+# Recognised layout names
+VALID_LAYOUTS = {"bullets", "stats", "comparison", "timeline", "quote", "grid"}
+
 
 # ── Slide data model ────────────────────────────────────────────────
 
@@ -96,11 +103,13 @@ class SlideData:
     title: str = ""
     bullets: list[str] = field(default_factory=list)
     notes: str = ""
+    layout: str = "bullets"  # one of VALID_LAYOUTS
 
 
 # ── Parser ──────────────────────────────────────────────────────────
 
 _HEADING_RE = re.compile(r"^#{1,3}\s+(?:\d+\.\s*)?(.+)")
+_LAYOUT_RE = re.compile(r"\[layout:\s*(\w+)\]\s*$", re.IGNORECASE)
 _BULLET_RE = re.compile(r"^[-*+]\s+(.*)")
 _ORDERED_RE = re.compile(r"^\d+\.\s+(.*)")
 _NOTE_RE = re.compile(r"^>\s*(.*)")
@@ -120,7 +129,16 @@ def _parse_slides(md_text: str) -> list[SlideData]:
         if m:
             if current:
                 slides.append(current)
-            current = SlideData(title=m.group(1).strip())
+            title_raw = m.group(1).strip()
+            # Extract layout hint from title
+            layout = "bullets"
+            lm = _LAYOUT_RE.search(title_raw)
+            if lm:
+                layout_name = lm.group(1).lower()
+                if layout_name in VALID_LAYOUTS:
+                    layout = layout_name
+                    title_raw = title_raw[:lm.start()].strip()
+            current = SlideData(title=title_raw, layout=layout)
             continue
 
         # Horizontal rule → slide separator (only if current exists)
@@ -307,6 +325,412 @@ def _add_end_decorations(slide, theme: PptTheme, slide_w, slide_h):
                theme.accent)
 
 
+# ── Layout renderers ─────────────────────────────────────────────────
+# Each renderer receives (slide, sd, theme, SLIDE_W, SLIDE_H, MARGIN)
+# and is responsible for placing title + body content.  Decorations are
+# added by the caller.
+
+def _render_bullets(slide, sd: SlideData, theme: PptTheme,
+                    slide_w, slide_h, margin, *, has_image: bool = False,
+                    images: dict | None = None, slide_idx: int = 0):
+    """Default layout: title + bullet list."""
+    content_w = slide_w - 2 * margin
+
+    # Title
+    _add_textbox(
+        slide, margin, Inches(0.5), content_w, Inches(0.9),
+        _strip_inline_md(sd.title), font_size=28, color=theme.title_color,
+        bold=True, font_name=theme.title_font,
+    )
+
+    # Title underline
+    _add_shape(slide, MSO_SHAPE.RECTANGLE,
+               margin, Inches(1.3), Inches(2.2), Pt(3),
+               theme.accent)
+
+    # Determine text area width based on image presence
+    IMG_W = Inches(4.5)
+    IMG_H = Inches(4.0)
+    text_w = (content_w - IMG_W - Inches(0.5)) if has_image else content_w
+
+    # Bullets with colored markers
+    if sd.bullets:
+        _add_bullets_with_markers(
+            slide, margin, Inches(1.6), text_w, Inches(5),
+            sd.bullets, theme,
+        )
+
+    # Image (right side)
+    if has_image and images and slide_idx in images:
+        img_stream = io.BytesIO(images[slide_idx])
+        img_left = slide_w - margin - IMG_W
+        img_top = Inches(1.6)
+        slide.shapes.add_picture(img_stream, img_left, img_top, IMG_W, IMG_H)
+
+
+def _render_stats(slide, sd: SlideData, theme: PptTheme,
+                  slide_w, slide_h, margin, **_kw):
+    """Stats layout: big numbers in columns with labels underneath."""
+    content_w = slide_w - 2 * margin
+
+    # Title
+    _add_textbox(
+        slide, margin, Inches(0.5), content_w, Inches(0.9),
+        _strip_inline_md(sd.title), font_size=28, color=theme.title_color,
+        bold=True, font_name=theme.title_font,
+    )
+    _add_shape(slide, MSO_SHAPE.RECTANGLE,
+               margin, Inches(1.3), Inches(2.2), Pt(3), theme.accent)
+
+    # Parse bullets into (value, label) pairs.
+    # Expected format: "label: value" or "label | value"
+    stats: list[tuple[str, str]] = []
+    for b in sd.bullets:
+        b = _strip_inline_md(b)
+        for sep in (":", "：", "|"):
+            if sep in b:
+                parts = b.split(sep, 1)
+                stats.append((parts[1].strip(), parts[0].strip()))
+                break
+        else:
+            stats.append((b, ""))
+
+    n = len(stats) or 1
+    col_w = content_w // n
+    card_h = Inches(3.2)
+    card_top = Inches(2.0)
+
+    for idx, (value, label) in enumerate(stats):
+        card_left = margin + col_w * idx
+        inner_w = col_w - Inches(0.3)
+
+        # Card background
+        _add_shape(slide, MSO_SHAPE.ROUNDED_RECTANGLE,
+                   card_left + Inches(0.15), card_top,
+                   inner_w, card_h, theme.accent_dim)
+
+        # Big number / value
+        _add_textbox(
+            slide, card_left + Inches(0.15), card_top + Inches(0.5),
+            inner_w, Inches(1.5),
+            value, font_size=40, color=theme.accent, bold=True,
+            alignment=PP_ALIGN.CENTER, font_name=theme.title_font,
+        )
+
+        # Label
+        if label:
+            _add_textbox(
+                slide, card_left + Inches(0.15), card_top + Inches(2.1),
+                inner_w, Inches(0.8),
+                label, font_size=16, color=theme.text_color,
+                alignment=PP_ALIGN.CENTER, font_name=theme.body_font,
+            )
+
+        # Accent line at top of card
+        _add_shape(slide, MSO_SHAPE.RECTANGLE,
+                   card_left + Inches(0.15), card_top,
+                   inner_w, Pt(4), theme.accent)
+
+
+def _render_comparison(slide, sd: SlideData, theme: PptTheme,
+                       slide_w, slide_h, margin, **_kw):
+    """Comparison layout: two columns with headers, separated by divider."""
+    content_w = slide_w - 2 * margin
+
+    # Title
+    _add_textbox(
+        slide, margin, Inches(0.5), content_w, Inches(0.9),
+        _strip_inline_md(sd.title), font_size=28, color=theme.title_color,
+        bold=True, font_name=theme.title_font,
+    )
+    _add_shape(slide, MSO_SHAPE.RECTANGLE,
+               margin, Inches(1.3), Inches(2.2), Pt(3), theme.accent)
+
+    # Split bullets into left/right.
+    # First bullet with "|" separator → column headers.
+    # Subsequent bullets with "|" → row data.
+    left_items: list[str] = []
+    right_items: list[str] = []
+    left_header = ""
+    right_header = ""
+
+    for i, b in enumerate(sd.bullets):
+        b = _strip_inline_md(b)
+        if "|" in b:
+            parts = [p.strip() for p in b.split("|", 1)]
+            if i == 0:
+                left_header = parts[0]
+                right_header = parts[1]
+            else:
+                left_items.append(parts[0])
+                right_items.append(parts[1])
+        else:
+            left_items.append(b)
+
+    col_gap = Inches(0.6)
+    col_w = (content_w - col_gap) // 2
+    left_x = margin
+    right_x = margin + col_w + col_gap
+    header_top = Inches(1.7)
+    body_top = Inches(2.5)
+
+    # Left column card
+    _add_shape(slide, MSO_SHAPE.ROUNDED_RECTANGLE,
+               left_x, header_top - Inches(0.1), col_w, Inches(4.5),
+               theme.accent_dim)
+    # Right column card
+    _add_shape(slide, MSO_SHAPE.ROUNDED_RECTANGLE,
+               right_x, header_top - Inches(0.1), col_w, Inches(4.5),
+               theme.accent_dim)
+
+    # Column headers
+    if left_header:
+        _add_textbox(
+            slide, left_x + Inches(0.3), header_top, col_w - Inches(0.6), Inches(0.6),
+            left_header, font_size=22, color=theme.accent, bold=True,
+            alignment=PP_ALIGN.CENTER, font_name=theme.title_font,
+        )
+    if right_header:
+        _add_textbox(
+            slide, right_x + Inches(0.3), header_top, col_w - Inches(0.6), Inches(0.6),
+            right_header, font_size=22, color=theme.accent, bold=True,
+            alignment=PP_ALIGN.CENTER, font_name=theme.title_font,
+        )
+
+    # Header accent lines
+    _add_shape(slide, MSO_SHAPE.RECTANGLE,
+               left_x + Inches(0.3), header_top + Inches(0.6),
+               col_w - Inches(0.6), Pt(2), theme.accent)
+    _add_shape(slide, MSO_SHAPE.RECTANGLE,
+               right_x + Inches(0.3), header_top + Inches(0.6),
+               col_w - Inches(0.6), Pt(2), theme.accent)
+
+    # Left items
+    if left_items:
+        _add_bullets_with_markers(
+            slide, left_x + Inches(0.3), body_top + Inches(0.2),
+            col_w - Inches(0.6), Inches(3.2),
+            left_items, theme,
+        )
+    # Right items
+    if right_items:
+        _add_bullets_with_markers(
+            slide, right_x + Inches(0.3), body_top + Inches(0.2),
+            col_w - Inches(0.6), Inches(3.2),
+            right_items, theme,
+        )
+
+    # Centre divider line
+    divider_x = margin + col_w + col_gap // 2 - Pt(1)
+    _add_shape(slide, MSO_SHAPE.RECTANGLE,
+               divider_x, header_top, Pt(2), Inches(4.5), theme.accent)
+
+
+def _render_timeline(slide, sd: SlideData, theme: PptTheme,
+                     slide_w, slide_h, margin, **_kw):
+    """Timeline layout: horizontal timeline with nodes and labels."""
+    content_w = slide_w - 2 * margin
+
+    # Title
+    _add_textbox(
+        slide, margin, Inches(0.5), content_w, Inches(0.9),
+        _strip_inline_md(sd.title), font_size=28, color=theme.title_color,
+        bold=True, font_name=theme.title_font,
+    )
+    _add_shape(slide, MSO_SHAPE.RECTANGLE,
+               margin, Inches(1.3), Inches(2.2), Pt(3), theme.accent)
+
+    # Parse bullets: expected "year/label: description" or "year | desc"
+    events: list[tuple[str, str]] = []
+    for b in sd.bullets:
+        b = _strip_inline_md(b)
+        for sep in (":", "：", "|"):
+            if sep in b:
+                parts = b.split(sep, 1)
+                events.append((parts[0].strip(), parts[1].strip()))
+                break
+        else:
+            events.append((b, ""))
+
+    n = len(events) or 1
+    timeline_y = Inches(3.8)
+    usable_w = content_w - Inches(1.0)
+
+    # Horizontal line
+    _add_shape(slide, MSO_SHAPE.RECTANGLE,
+               margin + Inches(0.5), timeline_y,
+               usable_w, Pt(3), theme.accent)
+
+    spacing = usable_w // n if n > 1 else usable_w
+    start_x = margin + Inches(0.5) + (spacing // 2 if n > 1 else usable_w // 2)
+
+    for idx, (label, desc) in enumerate(events):
+        cx = start_x + spacing * idx if n > 1 else start_x
+        node_size = Inches(0.35)
+
+        # Node circle
+        _add_shape(slide, MSO_SHAPE.OVAL,
+                   cx - node_size // 2, timeline_y - node_size // 2,
+                   node_size, node_size, theme.accent)
+
+        # Label above the line
+        _add_textbox(
+            slide, cx - Inches(1.2), timeline_y - Inches(1.5),
+            Inches(2.4), Inches(1.0),
+            label, font_size=18, color=theme.accent, bold=True,
+            alignment=PP_ALIGN.CENTER, font_name=theme.title_font,
+        )
+
+        # Description below the line
+        if desc:
+            _add_textbox(
+                slide, cx - Inches(1.2), timeline_y + Inches(0.5),
+                Inches(2.4), Inches(1.8),
+                desc, font_size=14, color=theme.text_color,
+                alignment=PP_ALIGN.CENTER, font_name=theme.body_font,
+            )
+
+
+def _render_quote(slide, sd: SlideData, theme: PptTheme,
+                  slide_w, slide_h, margin, **_kw):
+    """Quote layout: large quotation mark with centred text."""
+    content_w = slide_w - 2 * margin
+    # Use the first bullet as the main quote, rest as attribution
+    quote_text = sd.bullets[0] if sd.bullets else sd.title
+    quote_text = _strip_inline_md(quote_text)
+    attribution = ""
+    if len(sd.bullets) > 1:
+        attribution = _strip_inline_md(sd.bullets[-1])
+
+    # Large decorative quotation mark
+    _add_textbox(
+        slide, margin + Inches(0.5), Inches(1.0),
+        Inches(3), Inches(2.5),
+        "\u201C", font_size=120, color=theme.accent_dim, bold=True,
+        alignment=PP_ALIGN.LEFT, font_name=theme.title_font,
+    )
+
+    # Quote text — centred, large
+    _add_textbox(
+        slide, margin + Inches(1.5), Inches(2.2),
+        content_w - Inches(3.0), Inches(3.0),
+        quote_text, font_size=28, color=theme.text_color, bold=False,
+        alignment=PP_ALIGN.CENTER, font_name=theme.body_font,
+    )
+
+    # Accent line under quote
+    line_w = Inches(3)
+    _add_shape(slide, MSO_SHAPE.RECTANGLE,
+               (slide_w - line_w) // 2, Inches(5.0),
+               line_w, Pt(3), theme.accent)
+
+    # Attribution / source
+    if attribution:
+        _add_textbox(
+            slide, margin + Inches(1.5), Inches(5.3),
+            content_w - Inches(3.0), Inches(0.8),
+            f"— {attribution}", font_size=18, color=theme.note_color,
+            alignment=PP_ALIGN.CENTER, font_name=theme.body_font,
+        )
+
+    # Slide title as small text at top
+    if sd.title and sd.title != quote_text:
+        _add_textbox(
+            slide, margin, Inches(0.3), content_w, Inches(0.6),
+            _strip_inline_md(sd.title), font_size=16, color=theme.note_color,
+            alignment=PP_ALIGN.LEFT, font_name=theme.title_font,
+        )
+
+
+def _render_grid(slide, sd: SlideData, theme: PptTheme,
+                 slide_w, slide_h, margin, **_kw):
+    """Grid layout: cards in a 2- or 3-column grid."""
+    content_w = slide_w - 2 * margin
+
+    # Title
+    _add_textbox(
+        slide, margin, Inches(0.5), content_w, Inches(0.9),
+        _strip_inline_md(sd.title), font_size=28, color=theme.title_color,
+        bold=True, font_name=theme.title_font,
+    )
+    _add_shape(slide, MSO_SHAPE.RECTANGLE,
+               margin, Inches(1.3), Inches(2.2), Pt(3), theme.accent)
+
+    items = [_strip_inline_md(b) for b in sd.bullets]
+    n = len(items) or 1
+
+    # Decide grid dimensions
+    if n <= 2:
+        cols, rows = 2, 1
+    elif n <= 3:
+        cols, rows = 3, 1
+    elif n <= 4:
+        cols, rows = 2, 2
+    elif n <= 6:
+        cols, rows = 3, 2
+    else:
+        cols, rows = 3, 3  # cap at 9
+
+    gap = Inches(0.3)
+    card_w = (content_w - gap * (cols - 1)) // cols
+    total_h = Inches(4.5)
+    card_h = (total_h - gap * (rows - 1)) // rows
+    grid_top = Inches(1.8)
+
+    for idx, item in enumerate(items[:cols * rows]):
+        row = idx // cols
+        col = idx % cols
+        cx = margin + (card_w + gap) * col
+        cy = grid_top + (card_h + gap) * row
+
+        # Card background
+        _add_shape(slide, MSO_SHAPE.ROUNDED_RECTANGLE,
+                   cx, cy, card_w, card_h, theme.accent_dim)
+
+        # Accent top bar
+        _add_shape(slide, MSO_SHAPE.RECTANGLE,
+                   cx, cy, card_w, Pt(4), theme.accent)
+
+        # Parse "title: description" or "title | description"
+        card_title = item
+        card_desc = ""
+        for sep in (":", "：", "|"):
+            if sep in item:
+                parts = item.split(sep, 1)
+                card_title = parts[0].strip()
+                card_desc = parts[1].strip()
+                break
+
+        # Card title
+        _add_textbox(
+            slide, cx + Inches(0.25), cy + Inches(0.3),
+            card_w - Inches(0.5), Inches(0.7),
+            card_title, font_size=18, color=theme.accent, bold=True,
+            alignment=PP_ALIGN.LEFT, font_name=theme.title_font,
+        )
+
+        # Card description
+        if card_desc:
+            _add_textbox(
+                slide, cx + Inches(0.25), cy + Inches(1.0),
+                card_w - Inches(0.5), card_h - Inches(1.3),
+                card_desc, font_size=14, color=theme.text_color,
+                alignment=PP_ALIGN.LEFT, font_name=theme.body_font,
+            )
+
+
+# ── Layout dispatcher ────────────────────────────────────────────────
+
+_LAYOUT_RENDERERS = {
+    "bullets": _render_bullets,
+    "stats": _render_stats,
+    "comparison": _render_comparison,
+    "timeline": _render_timeline,
+    "quote": _render_quote,
+    "grid": _render_grid,
+}
+
+
 # ── Main conversion function ────────────────────────────────────────
 
 def markdown_to_pptx(md_text: str, title: str = "",
@@ -402,40 +826,14 @@ def markdown_to_pptx(md_text: str, title: str = "",
                 )
 
         else:
-            # ── Content slide ──
-            # Decorations first (behind content)
+            # ── Content slide — dispatch to layout renderer ──
             _add_content_decorations(slide, theme, SLIDE_W, SLIDE_H)
 
-            # Title
-            _add_textbox(
-                slide, MARGIN, Inches(0.5), CONTENT_W, Inches(0.9),
-                slide_title, font_size=28, color=theme.title_color,
-                bold=True, font_name=theme.title_font,
+            renderer = _LAYOUT_RENDERERS.get(sd.layout, _render_bullets)
+            renderer(
+                slide, sd, theme, SLIDE_W, SLIDE_H, MARGIN,
+                has_image=has_image, images=images, slide_idx=i,
             )
-
-            # Title underline
-            _add_shape(slide, MSO_SHAPE.RECTANGLE,
-                       MARGIN, Inches(1.3), Inches(2.2), Pt(3),
-                       theme.accent)
-
-            # Determine text area width based on image presence
-            IMG_W = Inches(4.5)
-            IMG_H = Inches(4.0)
-            TEXT_W = (CONTENT_W - IMG_W - Inches(0.5)) if has_image else CONTENT_W
-
-            # Bullets with colored markers
-            if sd.bullets:
-                _add_bullets_with_markers(
-                    slide, MARGIN, Inches(1.6), TEXT_W, Inches(5),
-                    sd.bullets, theme,
-                )
-
-            # Image (right side)
-            if has_image:
-                img_stream = io.BytesIO(images[i])
-                img_left = SLIDE_W - MARGIN - IMG_W
-                img_top = Inches(1.6)
-                slide.shapes.add_picture(img_stream, img_left, img_top, IMG_W, IMG_H)
 
         # Speaker notes
         if sd.notes:
