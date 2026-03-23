@@ -87,7 +87,7 @@
 - **纯文本（.txt）**：客户端直接生成下载
 - **Markdown（.md）**：客户端直接生成下载
 - **PDF（.pdf）**：后端使用 fpdf2 生成，支持中文
-- **PPT（.pptx）**：后端使用 python-pptx 生成，支持 4 种主题模板和可选 Unsplash 配图
+- **PPT（.pptx）**：后端使用 python-pptx 生成，支持 4 种主题模板、6 种版式（bullets/stats/comparison/timeline/quote/grid）和可选配图
 
 ### 7. 流式生成
 

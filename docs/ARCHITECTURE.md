@@ -50,7 +50,7 @@ my_first/
 │   │   ├── file_parser.py       # 文件文本提取（PDF / DOCX / 纯文本）
 │   │   ├── docx_export.py       # Markdown → Word 文档转换
 │   │   ├── pdf_export.py        # Markdown → PDF 文档转换（fpdf2，中文字体支持）
-│   │   ├── pptx_export.py       # Markdown → PPTX 演示文稿转换（python-pptx，4 种主题模板）
+│   │   ├── pptx_export.py       # Markdown → PPTX 演示文稿转换（python-pptx，4 种主题模板，6 种版式）
 │   │   └── unsplash.py          # Unsplash 图片搜索服务（为 PPT 幻灯片获取配图）
 │   └── tests/
 │       ├── test_routers.py      # 路由接口测试
@@ -188,7 +188,7 @@ SQLAlchemy ORM 模型 `HistoryRecord`，映射到 `history` 表：
 | `GONGZHONGHAO_PROMPT` | 微信公众号长文 | `style=gongzhonghao` |
 | `TOUTIAO_PROMPT` | 今日头条文章 | `style=toutiao` |
 | `AI_DRAMA_PROMPT` | AI 短剧脚本 | `style=ai_drama` |
-| `PPT_PROMPT` | 演示文稿大纲 | `style=ppt` |
+| `PPT_PROMPT` | 演示文稿大纲（含 6 种版式标记） | `style=ppt` |
 
 **核心函数**：
 
@@ -245,14 +245,21 @@ SQLAlchemy ORM 模型 `HistoryRecord`，映射到 `history` 表：
 
 将 Markdown PPT 大纲转换为 `.pptx` 文件（内存中生成），基于 python-pptx：
 
-- **Markdown 解析**：识别 `## 标题`（幻灯片标题）、`- 项目符号`、`> 演讲备注`、`---`（分隔符）
+- **Markdown 解析**：识别 `## 标题`（幻灯片标题）、`- 项目符号`、`> 演讲备注`、`---`（分隔符）、`[layout: 版式名]`（版式标记）
 - **幻灯片类型**：自动区分封面、内容页、结束页（检测"谢谢"、"致谢"、"Q&A"等关键词）
+- **6 种版式**（内容页根据 `[layout: xxx]` 标记选择）：
+  - `bullets` — 默认要点列表（标题 + 项目符号）
+  - `stats` — 关键数据展示（圆角卡片内大数字 + 标签，多列并排）
+  - `comparison` — 左右两栏对比（列标题 + 分割线 + 双栏内容）
+  - `timeline` — 水平时间轴（节点圆点 + 上方标签 + 下方描述）
+  - `quote` — 引用/金句（大引号装饰 + 居中文字 + 出处）
+  - `grid` — 网格卡片（自适应 2~3 列，带顶部强调线）
 - **4 种主题模板**：
   - `business`（商务蓝）— 默认
   - `minimal`（极简灰）
   - `green`（清新绿）
   - `warm`（暖色调）
-- **图片支持**：可为内容幻灯片添加配图（右侧布局），图片由 Unsplash 服务提供
+- **图片支持**：可为内容幻灯片添加配图（右侧布局），图片由 Unsplash / Bing 服务提供
 - **演讲备注**：嵌入到每张幻灯片的备注区域
 - **幻灯片编号**：自动添加页码
 
@@ -431,7 +438,7 @@ SQLAlchemy ORM 模型 `HistoryRecord`，映射到 `history` 表：
 ### PPTX 导出流程
 
 ```
-用户选择"生成PPT"风格 → AI 生成 Markdown PPT 大纲
+用户选择"生成PPT"风格 → AI 生成带版式标记的 Markdown PPT 大纲
                               │
                     用户点击"导出 PPT"
                               │
@@ -442,7 +449,7 @@ SQLAlchemy ORM 模型 `HistoryRecord`，映射到 `history` 表：
            green/warm)        ┌────┴────┐
                               │         │
                              否         是
-                              │    Unsplash API
+                              │    Unsplash/Bing
                               │    并发获取图片
                               │         │
                    └──────────┴─────────┘
@@ -450,7 +457,12 @@ SQLAlchemy ORM 模型 `HistoryRecord`，映射到 `history` 表：
                   POST /api/writing/export-pptx
                               │
                    pptx_export.py 内存中转换
-                  (解析大纲 → 生成幻灯片 → 嵌入图片)
+                  (解析大纲 → 识别版式标记 →
+                   按版式渲染幻灯片 → 嵌入图片)
+                              │
+                   6 种版式渲染器:
+                   bullets / stats / comparison
+                   timeline / quote / grid
                               │
                      返回 .pptx 二进制流
                               │
@@ -495,4 +507,4 @@ SQLAlchemy ORM 模型 `HistoryRecord`，映射到 `history` 表：
 
 ### 9. PPTX 导出策略
 
-后端在内存中生成 `.pptx` 文件，不写入磁盘。采用 Markdown 大纲格式作为中间表示，解析为结构化幻灯片数据后再生成演示文稿。4 种预置主题通过颜色方案和字体配置区分，支持自动识别封面、内容页和结束页。Unsplash 配图为可选功能，无 API Key 时不影响基本导出。
+后端在内存中生成 `.pptx` 文件，不写入磁盘。采用 Markdown 大纲格式作为中间表示，解析为结构化幻灯片数据后再生成演示文稿。AI Prompt 指导 LLM 在标题中嵌入 `[layout: xxx]` 版式标记，解析器提取后分发到 6 种专用渲染器（bullets、stats、comparison、timeline、quote、grid），实现多样化排版。4 种预置主题通过颜色方案和字体配置区分，支持自动识别封面、内容页和结束页。Unsplash / Bing 配图为可选功能，无 API Key 时不影响基本导出。
