@@ -16,12 +16,15 @@ interface Props {
   taskType?: string
   style?: string
   unsplashKey?: string
+  pptTemplate?: string
+  pptWithImages?: boolean
 }
 
 export default function ResultPanel({
   result, loading, tokenCount, error,
   onRegenerate, onRetry, onResultChange,
   originalContent, taskType, style, unsplashKey,
+  pptTemplate: pptTemplateProp, pptWithImages: pptWithImagesProp,
 }: Props) {
   const [exporting, setExporting] = useState(false)
   const [exportMsg, setExportMsg] = useState('')
@@ -30,8 +33,18 @@ export default function ResultPanel({
   const [showExportMenu, setShowExportMenu] = useState(false)
   const [copyMsg, setCopyMsg] = useState('')
   const [showCompare, setShowCompare] = useState(false)
-  const [pptTemplate, setPptTemplate] = useState('business')
-  const [pptWithImages, setPptWithImages] = useState(false)
+  const [pptTemplate, setPptTemplate] = useState(pptTemplateProp || 'business')
+  const [pptWithImages, setPptWithImages] = useState(pptWithImagesProp ?? true)
+
+  const isPpt = style === 'ppt'
+
+  useEffect(() => {
+    if (pptTemplateProp) setPptTemplate(pptTemplateProp)
+  }, [pptTemplateProp])
+
+  useEffect(() => {
+    if (pptWithImagesProp !== undefined) setPptWithImages(pptWithImagesProp)
+  }, [pptWithImagesProp])
 
   const canCompare = !loading && result && originalContent &&
     (taskType === TaskType.POLISH || taskType === TaskType.TRANSLATE)
@@ -122,9 +135,14 @@ export default function ResultPanel({
   }
 
   return (
-    <div className="result-panel">
+    <div className={`result-panel ${isPpt ? 'result-panel-ppt' : ''}`}>
       <div className="result-header">
         <span className="result-title">生成结果</span>
+        {isPpt ? (
+          <span className="result-mode-badge ppt-badge">PPT 大纲</span>
+        ) : style ? (
+          <span className="result-mode-badge text-badge">文案</span>
+        ) : null}
         {tokenCount > 0 && (
           <span className="token-count">{tokenCount} tokens</span>
         )}
@@ -184,37 +202,19 @@ export default function ResultPanel({
             <button className="btn btn-edit" onClick={handleToggleEdit}>编辑</button>
           )}
 
-          <div className="export-dropdown">
-            <button
-              className="btn btn-download"
-              onClick={(e) => { e.stopPropagation(); setShowExportMenu(!showExportMenu) }}
-              disabled={exporting}
-            >
-              {exporting ? '导出中...' : '导出 \u25be'}
-            </button>
-            {showExportMenu && (
-              <div className="export-menu">
-                <button onClick={() => handleExport('docx')}>Word (.docx)</button>
-                <button onClick={() => handleExport('txt')}>纯文本 (.txt)</button>
-                <button onClick={() => handleExport('md')}>Markdown (.md)</button>
-                <button onClick={() => handleExport('pdf')}>PDF (.pdf)</button>
-                <button onClick={() => handleExport('pptx')}>PPT (.pptx)</button>
-              </div>
-            )}
-          </div>
-
-          {style === 'ppt' && (
-            <div className="ppt-options">
-              <select
-                className="ppt-template-select"
-                value={pptTemplate}
-                onChange={(e) => setPptTemplate(e.target.value)}
-              >
-                {PPT_TEMPLATE_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
-              {unsplashKey && (
+          {/* PPT mode: prominent PPTX export + template inline */}
+          {isPpt && (
+            <>
+              <div className="ppt-options">
+                <select
+                  className="ppt-template-select"
+                  value={pptTemplate}
+                  onChange={(e) => setPptTemplate(e.target.value)}
+                >
+                  {PPT_TEMPLATE_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
                 <label className="ppt-image-toggle">
                   <input
                     type="checkbox"
@@ -223,9 +223,38 @@ export default function ResultPanel({
                   />
                   <span>配图</span>
                 </label>
-              )}
-            </div>
+              </div>
+              <button
+                className="btn btn-export-pptx"
+                onClick={() => handleExport('pptx')}
+                disabled={exporting}
+              >
+                {exporting ? '导出中...' : '导出 PPTX'}
+              </button>
+            </>
           )}
+
+          {/* Standard export dropdown */}
+          <div className="export-dropdown">
+            <button
+              className="btn btn-download"
+              onClick={(e) => { e.stopPropagation(); setShowExportMenu(!showExportMenu) }}
+              disabled={exporting}
+            >
+              {exporting ? '导出中...' : (isPpt ? '其他格式 \u25be' : '导出 \u25be')}
+            </button>
+            {showExportMenu && (
+              <div className="export-menu">
+                <button onClick={() => handleExport('docx')}>Word (.docx)</button>
+                <button onClick={() => handleExport('txt')}>纯文本 (.txt)</button>
+                <button onClick={() => handleExport('md')}>Markdown (.md)</button>
+                <button onClick={() => handleExport('pdf')}>PDF (.pdf)</button>
+                {!isPpt && (
+                  <button onClick={() => handleExport('pptx')}>PPT (.pptx)</button>
+                )}
+              </div>
+            )}
+          </div>
 
           {onRegenerate && (
             <button className="btn btn-regenerate" onClick={onRegenerate}>换一个</button>

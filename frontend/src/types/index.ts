@@ -37,6 +37,8 @@ export const TASK_PLACEHOLDERS: Record<TaskType, string> = {
   [TaskType.SUMMARIZE]: '请粘贴需要总结的长文本...',
 }
 
+export type ContentMode = 'text' | 'ppt'
+
 export const STYLE_OPTIONS = [
   { value: '', label: '默认' },
   { value: 'literary', label: '文学' },
@@ -46,6 +48,16 @@ export const STYLE_OPTIONS = [
   { value: 'toutiao', label: '头条文案' },
   { value: 'ai_drama', label: 'AI短剧脚本' },
   { value: 'ppt', label: '生成PPT' },
+]
+
+export const TEXT_STYLE_OPTIONS = [
+  { value: '', label: '默认' },
+  { value: 'literary', label: '文学' },
+  { value: 'sh_gaokao', label: '上海高考作文' },
+  { value: 'xiaohongshu', label: '小红书爆款' },
+  { value: 'gongzhonghao', label: '公众号文案' },
+  { value: 'toutiao', label: '头条文案' },
+  { value: 'ai_drama', label: 'AI短剧脚本' },
 ]
 
 export const LANG_OPTIONS = [

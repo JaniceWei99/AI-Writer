@@ -232,6 +232,7 @@ function App() {
             loading={loading}
             onStop={handleStop}
             online={online}
+            unsplashKey={settings.unsplashKey}
           />
           <ResultPanel
             result={result}

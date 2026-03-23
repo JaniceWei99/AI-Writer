@@ -21,7 +21,7 @@ MAX_POETRY_RETRIES = 3
 
 @router.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
-    """上传文件并提取文本内容。支持 PDF、Word、TXT 等格式。"""
+    """上传文件并提取文本内容。支持 PDF、Word、PPT、TXT 等格式。"""
     if not file.filename:
         raise HTTPException(status_code=400, detail="未提供文件名")
     try:

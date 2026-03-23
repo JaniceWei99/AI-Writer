@@ -4,6 +4,195 @@
   gap: 16px;
 }
 
+/* === Mode Switcher === */
+
+.mode-switcher {
+  display: flex;
+  gap: 12px;
+}
+
+.mode-card {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.25s;
+  text-align: left;
+}
+
+.mode-card:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.mode-card.active {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+  color: var(--text-h);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.mode-card-ppt.active {
+  --_ppt-accent: #e67e22;
+  border-color: var(--_ppt-accent);
+  background: rgba(230, 126, 34, 0.08);
+  box-shadow: 0 0 0 1px var(--_ppt-accent);
+}
+
+.mode-card-ppt:hover:not(:disabled) {
+  --_ppt-accent: #e67e22;
+  border-color: var(--_ppt-accent);
+  background: rgba(230, 126, 34, 0.05);
+}
+
+.mode-card:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mode-icon {
+  font-size: 24px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.mode-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mode-label {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.mode-desc {
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+/* === PPT mode form border accent === */
+
+.writing-form.mode-ppt .content-input:focus {
+  border-color: #e67e22;
+  box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.12);
+}
+
+/* === PPT form options === */
+
+.ppt-form-options {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.ppt-template-cards {
+  display: flex;
+  gap: 8px;
+}
+
+.ppt-tpl-card {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ppt-tpl-card:hover:not(:disabled) {
+  border-color: var(--text);
+}
+
+.ppt-tpl-card.active {
+  border-color: #e67e22;
+  color: var(--text-h);
+  background: rgba(230, 126, 34, 0.06);
+}
+
+.ppt-tpl-color {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.ppt-tpl-business .ppt-tpl-color { background: #0F1729; }
+.ppt-tpl-minimal .ppt-tpl-color  { background: #FAFAFA; border: 1px solid #ccc; }
+.ppt-tpl-green .ppt-tpl-color    { background: #0D1F0D; }
+.ppt-tpl-warm .ppt-tpl-color     { background: #2E1A0E; }
+
+.ppt-tpl-name {
+  white-space: nowrap;
+}
+
+.ppt-form-options .ppt-image-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--text);
+  cursor: pointer;
+  user-select: none;
+}
+
+.ppt-form-options .ppt-image-toggle input[type="checkbox"] {
+  accent-color: #e67e22;
+  cursor: pointer;
+}
+
+/* === PPT submit button === */
+
+.btn-submit-ppt {
+  background: #e67e22;
+  color: #fff;
+}
+
+.btn-submit-ppt:hover:not(:disabled) {
+  background: #d35400;
+}
+
+.btn-submit-ppt:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* === PPT key hint === */
+
+.ppt-key-hint {
+  font-size: 12px;
+  color: var(--text);
+  opacity: 0.7;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: #e67e22;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.link-btn:hover {
+  opacity: 0.8;
+}
+
 .task-tabs {
   display: flex;
   gap: 8px;

@@ -3,10 +3,11 @@ import {
   TaskType,
   TASK_LABELS,
   TASK_PLACEHOLDERS,
-  STYLE_OPTIONS,
+  TEXT_STYLE_OPTIONS,
   LANG_OPTIONS,
+  PPT_TEMPLATE_OPTIONS,
 } from '../types'
-import type { WritingRequest } from '../types'
+import type { ContentMode, WritingRequest } from '../types'
 import { uploadFile } from '../services/api'
 import { getTemplates, addTemplate, removeTemplate } from '../services/templates'
 import type { PromptTemplate } from '../services/templates'
@@ -17,11 +18,13 @@ interface Props {
   loading: boolean
   onStop: () => void
   online: boolean | null
+  unsplashKey?: string
 }
 
-const ACCEPT_TYPES = '.pdf,.docx,.doc,.txt,.md,.csv,.json,.xml,.html,.htm'
+const ACCEPT_TYPES = '.pdf,.docx,.doc,.pptx,.ppt,.txt,.md,.csv,.json,.xml,.html,.htm'
 
-export default function WritingForm({ onSubmit, loading, onStop, online }: Props) {
+export default function WritingForm({ onSubmit, loading, onStop, online, unsplashKey }: Props) {
+  const [mode, setMode] = useState<ContentMode>('text')
   const [taskType, setTaskType] = useState<TaskType>(TaskType.GENERATE)
   const [content, setContent] = useState('')
   const [style, setStyle] = useState('')
@@ -31,6 +34,8 @@ export default function WritingForm({ onSubmit, loading, onStop, online }: Props
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [pptTemplate, setPptTemplate] = useState('business')
+  const [pptWithImages, setPptWithImages] = useState(true)
 
   // Template management
   const [templates, setTemplates] = useState<PromptTemplate[]>(getTemplates)
@@ -67,9 +72,9 @@ export default function WritingForm({ onSubmit, loading, onStop, online }: Props
   const handleSubmit = () => {
     if (!content.trim()) return
     onSubmit({
-      task_type: taskType,
+      task_type: mode === 'ppt' ? TaskType.GENERATE : taskType,
       content: content.trim(),
-      style,
+      style: mode === 'ppt' ? 'ppt' : style,
       target_lang: targetLang,
       attachment_text: attachmentText,
     })
@@ -109,34 +114,97 @@ export default function WritingForm({ onSubmit, loading, onStop, online }: Props
     setTemplates(getTemplates())
   }
 
+  const pptPlaceholder = '请输入PPT的主题，例如：做一个关于人工智能发展趋势的PPT，10页左右...'
+
   return (
-    <div className="writing-form">
-      <div className="task-tabs">
-        {Object.values(TaskType).map((t) => (
-          <button
-            key={t}
-            className={`task-tab ${taskType === t ? 'active' : ''}`}
-            onClick={() => setTaskType(t)}
-            disabled={loading}
-          >
-            {TASK_LABELS[t]}
-          </button>
-        ))}
+    <div className={`writing-form ${mode === 'ppt' ? 'mode-ppt' : 'mode-text'}`}>
+      {/* Mode Switcher */}
+      <div className="mode-switcher">
+        <button
+          className={`mode-card ${mode === 'text' ? 'active' : ''}`}
+          onClick={() => setMode('text')}
+          disabled={loading}
+        >
+          <span className="mode-icon">&#9997;</span>
+          <div className="mode-info">
+            <span className="mode-label">文案创作</span>
+            <span className="mode-desc">文章、翻译、润色、摘要</span>
+          </div>
+        </button>
+        <button
+          className={`mode-card mode-card-ppt ${mode === 'ppt' ? 'active' : ''}`}
+          onClick={() => setMode('ppt')}
+          disabled={loading}
+        >
+          <span className="mode-icon">&#9638;</span>
+          <div className="mode-info">
+            <span className="mode-label">演示文稿</span>
+            <span className="mode-desc">PPT 大纲生成与导出</span>
+          </div>
+        </button>
       </div>
+
+      {/* Task tabs - only for text mode */}
+      {mode === 'text' && (
+        <div className="task-tabs">
+          {Object.values(TaskType).map((t) => (
+            <button
+              key={t}
+              className={`task-tab ${taskType === t ? 'active' : ''}`}
+              onClick={() => setTaskType(t)}
+              disabled={loading}
+            >
+              {TASK_LABELS[t]}
+            </button>
+          ))}
+        </div>
+      )}
 
       <textarea
         className="content-input"
         value={content}
         onChange={(e) => setContent(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder={TASK_PLACEHOLDERS[taskType]}
-        rows={8}
+        placeholder={mode === 'ppt' ? pptPlaceholder : TASK_PLACEHOLDERS[taskType]}
+        rows={mode === 'ppt' ? 5 : 8}
         disabled={loading}
       />
       <div className="content-counter">
         <span>{content.length} 字符</span>
         <span className="shortcut-hint">Ctrl+Enter 提交</span>
       </div>
+
+      {/* PPT options - only in PPT mode */}
+      {mode === 'ppt' && (
+        <div className="ppt-form-options">
+          <label className="option">
+            <span>主题模板</span>
+            <div className="ppt-template-cards">
+              {PPT_TEMPLATE_OPTIONS.map((o) => (
+                <button
+                  key={o.value}
+                  className={`ppt-tpl-card ppt-tpl-${o.value} ${pptTemplate === o.value ? 'active' : ''}`}
+                  onClick={() => setPptTemplate(o.value)}
+                  disabled={loading}
+                  title={o.label}
+                >
+                  <span className="ppt-tpl-color" />
+                  <span className="ppt-tpl-name">{o.label}</span>
+                </button>
+              ))}
+            </div>
+          </label>
+          <label className="ppt-image-toggle">
+            <input
+              type="checkbox"
+              checked={pptWithImages}
+              onChange={(e) => setPptWithImages(e.target.checked)}
+              disabled={loading}
+            />
+            <span>自动配图</span>
+          </label>
+        </div>
+      )}
 
       <div className="attachment-row">
         <input
@@ -151,7 +219,7 @@ export default function WritingForm({ onSubmit, loading, onStop, online }: Props
         <label htmlFor="file-upload" className={`btn btn-upload ${loading || uploading ? 'disabled' : ''}`}>
           {uploading ? '解析中...' : '上传附件'}
         </label>
-        <span className="attachment-hint">支持 PDF、Word、TXT 等文件作为参考资料</span>
+        <span className="attachment-hint">支持 PDF、Word、PPT、TXT 等文件作为参考资料</span>
 
         {attachmentName && (
           <span className="attachment-tag">
@@ -164,16 +232,18 @@ export default function WritingForm({ onSubmit, loading, onStop, online }: Props
       </div>
 
       <div className="options-row">
-        <label className="option">
-          <span>风格</span>
-          <select value={style} onChange={(e) => setStyle(e.target.value)} disabled={loading}>
-            {STYLE_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </select>
-        </label>
+        {mode === 'text' && (
+          <label className="option">
+            <span>风格</span>
+            <select value={style} onChange={(e) => setStyle(e.target.value)} disabled={loading}>
+              {TEXT_STYLE_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+          </label>
+        )}
 
-        {taskType === TaskType.TRANSLATE && (
+        {mode === 'text' && taskType === TaskType.TRANSLATE && (
           <label className="option">
             <span>目标语言</span>
             <select value={targetLang} onChange={(e) => setTargetLang(e.target.value)} disabled={loading}>
@@ -246,12 +316,12 @@ export default function WritingForm({ onSubmit, loading, onStop, online }: Props
           </button>
         ) : (
           <button
-            className="btn btn-submit"
+            className={`btn ${mode === 'ppt' ? 'btn-submit-ppt' : 'btn-submit'}`}
             onClick={handleSubmit}
             disabled={!content.trim() || online === false}
             title={online === false ? '服务离线，无法提交' : ''}
           >
-            开始处理
+            {mode === 'ppt' ? '生成PPT大纲' : '开始处理'}
           </button>
         )}
       </div>
