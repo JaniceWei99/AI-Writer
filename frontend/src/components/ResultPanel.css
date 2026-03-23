@@ -11,6 +11,27 @@
   border-color: rgba(230, 126, 34, 0.3);
 }
 
+.result-panel-ppt .result-header {
+  border-bottom-color: rgba(230, 126, 34, 0.2);
+}
+
+.result-panel-ppt .result-title {
+  color: #e67e22;
+}
+
+.result-panel-ppt .token-count {
+  background: rgba(230, 126, 34, 0.1);
+  color: #e67e22;
+}
+
+.result-panel-ppt .generating {
+  color: #e67e22;
+}
+
+.result-panel-ppt .cursor {
+  background: #e67e22;
+}
+
 /* Mode badges */
 .result-mode-badge {
   font-size: 12px;
@@ -446,6 +467,43 @@
 .ppt-image-toggle input[type="checkbox"] {
   accent-color: var(--accent);
   cursor: pointer;
+}
+
+/* PPT mode button accents */
+.result-panel-ppt .btn-copy:hover,
+.result-panel-ppt .btn-download:hover,
+.result-panel-ppt .btn-edit:hover,
+.result-panel-ppt .btn-regenerate:hover {
+  border-color: #e67e22;
+  color: #e67e22;
+}
+
+.result-panel-ppt .btn-regenerate {
+  border-color: #e67e22;
+  color: #e67e22;
+}
+
+.result-panel-ppt .result-edit-area {
+  border-color: #e67e22;
+  box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.12);
+}
+
+.result-panel-ppt .ppt-template-select:hover {
+  border-color: #e67e22;
+}
+
+.result-panel-ppt .ppt-image-toggle input[type="checkbox"] {
+  accent-color: #e67e22;
+}
+
+.result-panel-ppt .export-menu button:hover {
+  background: rgba(230, 126, 34, 0.08);
+  color: #e67e22;
+}
+
+.result-panel-ppt .result-content blockquote {
+  border-left-color: #e67e22;
+  background: rgba(230, 126, 34, 0.05);
 }
 
 /* Prominent PPTX export button */

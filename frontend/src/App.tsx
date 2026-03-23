@@ -140,6 +140,7 @@ function App() {
     setActiveId(item.id)
     setOriginalContent(item.content)
     setLastTaskType(item.task_type)
+    setLastStyle(item.style || '')
   }, [])
 
   const handleDeleteHistory = useCallback(async (id: string) => {

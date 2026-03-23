@@ -64,14 +64,18 @@ export default function HistoryPanel({ items, activeId, onSelect, onDelete, onCl
         <div className="history-empty">{keyword ? '没有匹配的记录' : '暂无记录'}</div>
       ) : (
         <ul className="history-list">
-          {filtered.map((item) => (
+          {filtered.map((item) => {
+            const isPpt = item.style === 'ppt'
+            return (
             <li
               key={item.id}
-              className={`history-item ${item.id === activeId ? 'active' : ''}`}
+              className={`history-item ${item.id === activeId ? 'active' : ''} ${isPpt ? 'history-item-ppt' : ''}`}
               onClick={() => onSelect(item)}
             >
               <div className="history-item-top">
-                <span className="history-tag">{TASK_LABELS[item.task_type]}</span>
+                <span className={`history-tag ${isPpt ? 'history-tag-ppt' : ''}`}>
+                  {isPpt ? 'PPT' : TASK_LABELS[item.task_type]}
+                </span>
                 <span className="history-time">{formatTime(item.created_at)}</span>
               </div>
               <div className="history-preview">{preview(item.content)}</div>
@@ -83,7 +87,8 @@ export default function HistoryPanel({ items, activeId, onSelect, onDelete, onCl
                 &times;
               </button>
             </li>
-          ))}
+            )
+          })}
         </ul>
       )}
       {showConfirm && (
