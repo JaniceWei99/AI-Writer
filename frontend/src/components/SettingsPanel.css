@@ -81,6 +81,28 @@
   border-color: var(--accent);
 }
 
+.settings-select {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text-h);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+  cursor: pointer;
+  appearance: auto;
+}
+
+.settings-select:focus {
+  border-color: var(--accent);
+}
+
+.settings-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .settings-input::placeholder {
   color: var(--text);
   opacity: 0.5;
@@ -141,4 +163,22 @@
 
 .settings-btn-save:hover {
   filter: brightness(1.1);
+}
+
+/* Provider info */
+.settings-provider-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.settings-provider-badge {
+  display: inline-block;
+  padding: 4px 14px;
+  border-radius: 6px;
+  background: var(--accent-bg);
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 600;
 }
