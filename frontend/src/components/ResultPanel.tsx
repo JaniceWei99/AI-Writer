@@ -12,6 +12,7 @@ interface Props {
   onRegenerate?: () => void
   onRetry?: () => void
   onResultChange?: (text: string) => void
+  onRefine?: (feedback: string) => void
   originalContent?: string
   taskType?: string
   style?: string
@@ -22,7 +23,7 @@ interface Props {
 
 export default function ResultPanel({
   result, loading, tokenCount, error,
-  onRegenerate, onRetry, onResultChange,
+  onRegenerate, onRetry, onResultChange, onRefine,
   originalContent, taskType, style, unsplashKey,
   pptTemplate: pptTemplateProp, pptWithImages: pptWithImagesProp,
 }: Props) {
@@ -35,6 +36,7 @@ export default function ResultPanel({
   const [showCompare, setShowCompare] = useState(false)
   const [pptTemplate, setPptTemplate] = useState(pptTemplateProp || 'business')
   const [pptWithImages, setPptWithImages] = useState(pptWithImagesProp ?? true)
+  const [refineText, setRefineText] = useState('')
 
   const isPpt = style === 'ppt'
 
@@ -73,6 +75,20 @@ export default function ResultPanel({
   const handleCancelEdit = () => {
     setEditText(result)
     setEditing(false)
+  }
+
+  const handleRefineSubmit = () => {
+    const text = refineText.trim()
+    if (!text || !onRefine) return
+    onRefine(text)
+    setRefineText('')
+  }
+
+  const handleRefineKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleRefineSubmit()
+    }
   }
 
   const currentContent = editing ? editText : result
@@ -265,6 +281,25 @@ export default function ResultPanel({
               {exportMsg}
             </span>
           )}
+        </div>
+      )}
+      {result && !loading && onRefine && (
+        <div className="refine-bar">
+          <textarea
+            className="refine-input"
+            value={refineText}
+            onChange={(e) => setRefineText(e.target.value)}
+            onKeyDown={handleRefineKeyDown}
+            placeholder="对结果不满意？输入修改意见，继续优化..."
+            rows={1}
+          />
+          <button
+            className="btn btn-refine"
+            onClick={handleRefineSubmit}
+            disabled={!refineText.trim()}
+          >
+            继续优化
+          </button>
         </div>
       )}
     </div>

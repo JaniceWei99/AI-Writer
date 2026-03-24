@@ -533,3 +533,77 @@
   color: var(--text);
   opacity: 0.7;
 }
+
+/* 继续优化输入栏 */
+.refine-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.refine-input {
+  flex: 1;
+  min-height: 38px;
+  max-height: 120px;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text-h);
+  font-size: 14px;
+  line-height: 1.5;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  font-family: inherit;
+}
+
+.refine-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+}
+
+.refine-input::placeholder {
+  color: var(--text);
+  opacity: 0.5;
+}
+
+.btn-refine {
+  padding: 8px 18px;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.btn-refine:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.btn-refine:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* PPT mode refine accent */
+.result-panel-ppt .refine-input:focus {
+  border-color: #e67e22;
+  box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.12);
+}
+
+.result-panel-ppt .btn-refine {
+  background: #e67e22;
+}
+
+.result-panel-ppt .btn-refine:hover:not(:disabled) {
+  background: #d35400;
+}

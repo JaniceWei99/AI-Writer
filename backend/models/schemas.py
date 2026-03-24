@@ -37,6 +37,15 @@ class ExportRequest(BaseModel):
     title: str = ""
 
 
+class RefineRequest(BaseModel):
+    previous_result: str
+    # 上一次 AI 生成的完整结果
+    feedback: str
+    # 用户对结果的修改意见
+    model: str = ""
+    temperature: Optional[float] = None
+
+
 class ExportPptxRequest(BaseModel):
     content: str
     title: str = ""

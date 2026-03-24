@@ -4,7 +4,7 @@ import ResultPanel from './components/ResultPanel'
 import HistoryPanel from './components/HistoryPanel'
 import SettingsPanel, { loadSettings, saveSettings } from './components/SettingsPanel'
 import type { AppSettings } from './components/SettingsPanel'
-import { streamWriting, healthCheck } from './services/api'
+import { streamWriting, streamRefine, healthCheck } from './services/api'
 import { getHistory, addHistory, removeHistory, clearHistory } from './services/history'
 import type { WritingRequest, HistoryItem } from './types'
 import './App.css'
@@ -174,6 +174,54 @@ function App() {
     }
   }, [loading, handleSubmit])
 
+  const handleRefine = useCallback(async (feedback: string) => {
+    if (!result || loading) return
+
+    const previousResult = result
+    setResult('')
+    setTokenCount(0)
+    setError('')
+    setLoading(true)
+    setActiveId('')
+
+    let fullText = ''
+    let count = 0
+    const controller = await streamRefine(
+      {
+        previous_result: previousResult,
+        feedback,
+        model: settings.model || undefined,
+        temperature: settings.temperature,
+      },
+      (token) => {
+        count++
+        fullText += token
+        setResult((prev) => prev + token)
+        setTokenCount(count)
+      },
+      () => {
+        setLoading(false)
+        if (fullText.trim() && lastReqRef.current) {
+          addHistory({
+            task_type: lastReqRef.current.task_type,
+            content: lastReqRef.current.content,
+            result: fullText,
+            style: lastReqRef.current.style,
+            token_count: count,
+          }).then((entry) => {
+            setActiveId(entry.id)
+            getHistory().then(setHistory).catch(() => {})
+          }).catch(() => {})
+        }
+      },
+      (err) => {
+        setError(err.message)
+        setLoading(false)
+      },
+    )
+    abortRef.current = controller
+  }, [result, loading, settings])
+
   const handleResultChange = useCallback((text: string) => {
     setResult(text)
   }, [])
@@ -242,6 +290,7 @@ function App() {
             error={error}
             onRegenerate={handleRegenerate}
             onRetry={handleRetry}
+            onRefine={handleRefine}
             onResultChange={handleResultChange}
             originalContent={originalContent}
             taskType={lastTaskType}

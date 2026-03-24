@@ -5,8 +5,8 @@ from urllib.parse import quote
 
 from fastapi import APIRouter, File, UploadFile, HTTPException
 from fastapi.responses import StreamingResponse
-from models.schemas import WritingRequest, WritingResponse, ExportRequest, ExportPptxRequest
-from prompts.writing import build_prompt, is_poetry_request, validate_poetry
+from models.schemas import WritingRequest, WritingResponse, ExportRequest, ExportPptxRequest, RefineRequest
+from prompts.writing import build_prompt, build_refine_prompt, is_poetry_request, validate_poetry
 from services.ollama_client import generate, generate_stream, DEFAULT_MODEL
 from services.file_parser import extract_text
 from services.docx_export import markdown_to_docx
@@ -100,6 +100,22 @@ async def stream_writing(req: WritingRequest):
         target_lang=req.target_lang,
         attachment_text=req.attachment_text,
     )
+
+    async def event_generator():
+        async for token in generate_stream(prompt, model=model, temperature=temp):
+            yield f"data: {json.dumps(token)}\n\n"
+        yield "data: [DONE]\n\n"
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+
+@router.post("/refine")
+async def refine_writing(req: RefineRequest):
+    """流式处理继续对话/修改请求，根据用户反馈优化之前的结果。"""
+    logger.info("Refine request: feedback_len=%d prev_len=%d", len(req.feedback), len(req.previous_result))
+    model = req.model or DEFAULT_MODEL
+    temp = req.temperature
+    prompt = build_refine_prompt(req.previous_result, req.feedback)
 
     async def event_generator():
         async for token in generate_stream(prompt, model=model, temperature=temp):

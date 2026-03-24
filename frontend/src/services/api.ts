@@ -68,12 +68,88 @@ export async function streamWriting(
   return controller
 }
 
+export interface RefineRequest {
+  previous_result: string
+  feedback: string
+  model?: string
+  temperature?: number | null
+}
+
+export async function streamRefine(
+  req: RefineRequest,
+  onToken: (token: string) => void,
+  onDone: () => void,
+  onError: (err: Error) => void,
+): Promise<AbortController> {
+  const controller = new AbortController()
+
+  fetch(`${API_BASE}/api/writing/refine`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(req),
+    signal: controller.signal,
+  })
+    .then(async (res) => {
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const reader = res.body?.getReader()
+      if (!reader) throw new Error('No reader')
+
+      const decoder = new TextDecoder()
+      let buffer = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() ?? ''
+
+        for (const line of lines) {
+          const trimmed = line.trim()
+          if (!trimmed.startsWith('data: ')) continue
+          const payload = trimmed.slice(6)
+          if (payload === '[DONE]') {
+            onDone()
+            return
+          }
+          try {
+            onToken(JSON.parse(payload))
+          } catch {
+            onToken(payload)
+          }
+        }
+      }
+      onDone()
+    })
+    .catch((err: unknown) => {
+      if (err instanceof DOMException && err.name === 'AbortError') return
+      onError(err instanceof Error ? err : new Error(String(err)))
+    })
+
+  return controller
+}
+
 export async function healthCheck(): Promise<boolean> {
   try {
     const { data } = await api.get('/api/health')
     return data.status === 'ok'
   } catch {
     return false
+  }
+}
+
+export interface ModelsResult {
+  models: string[]
+  default: string
+}
+
+export async function fetchModels(): Promise<ModelsResult> {
+  try {
+    const { data } = await api.get<ModelsResult>('/api/models')
+    return data
+  } catch {
+    return { models: [], default: '' }
   }
 }
 
