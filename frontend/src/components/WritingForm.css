@@ -603,3 +603,32 @@
   line-height: 1.5;
   animation: fadeIn 0.2s ease-out;
 }
+
+/* === Custom style manage button === */
+
+.btn-style-manage {
+  width: 28px;
+  height: 28px;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--accent);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.btn-style-manage:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.btn-style-manage:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

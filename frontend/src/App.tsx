@@ -3,8 +3,10 @@ import WritingForm from './components/WritingForm'
 import ResultPanel from './components/ResultPanel'
 import HistoryPanel from './components/HistoryPanel'
 import SettingsPanel, { loadSettings, saveSettings } from './components/SettingsPanel'
+import StyleEditor from './components/StyleEditor'
 import type { AppSettings } from './components/SettingsPanel'
-import { streamWriting, streamRefine, healthCheck } from './services/api'
+import { streamWriting, streamRefine, healthCheck, fetchCustomStyles } from './services/api'
+import type { CustomStyleItem } from './services/api'
 import { getHistory, addHistory, removeHistory, clearHistory } from './services/history'
 import type { WritingRequest, HistoryItem } from './types'
 import './App.css'
@@ -26,6 +28,7 @@ function App() {
   const [tokenCount, setTokenCount] = useState(0)
   const [error, setError] = useState('')
   const [online, setOnline] = useState<boolean | null>(null)
+  const [providerInfo, setProviderInfo] = useState<{ provider?: string; model?: string; availableProviders?: string[] }>({})
   const [history, setHistory] = useState<HistoryItem[]>([])
   const [activeId, setActiveId] = useState('')
   const abortRef = useRef<AbortController | null>(null)
@@ -39,6 +42,10 @@ function App() {
   // Settings
   const [settings, setSettings] = useState<AppSettings>(loadSettings)
   const [showSettings, setShowSettings] = useState(false)
+  const [showStyleEditor, setShowStyleEditor] = useState(false)
+
+  // Custom styles from backend
+  const [customStyles, setCustomStyles] = useState<CustomStyleItem[]>([])
 
   // Compare view: track the original content for polish/translate
   const [originalContent, setOriginalContent] = useState('')
@@ -55,8 +62,12 @@ function App() {
   }, [theme])
 
   useEffect(() => {
-    healthCheck().then(setOnline)
+    healthCheck().then((info) => {
+      setOnline(info.online)
+      setProviderInfo(info)
+    })
     getHistory().then(setHistory).catch(() => {})
+    fetchCustomStyles().then(setCustomStyles)
   }, [])
 
   // Global keyboard shortcuts
@@ -231,6 +242,10 @@ function App() {
     saveSettings(s)
   }, [])
 
+  const reloadCustomStyles = useCallback(() => {
+    fetchCustomStyles().then(setCustomStyles)
+  }, [])
+
   const cycleTheme = () => {
     setTheme((prev) => {
       const order: Theme[] = ['auto', 'light', 'dark']
@@ -282,6 +297,8 @@ function App() {
             onStop={handleStop}
             online={online}
             unsplashKey={settings.unsplashKey}
+            customStyles={customStyles}
+            onOpenStyleEditor={() => setShowStyleEditor(true)}
           />
           <ResultPanel
             result={result}
@@ -301,7 +318,7 @@ function App() {
       </div>
 
       <footer className="app-footer">
-        <p>Powered by Ollama &middot; {settings.model || 'qwen3.5:9b'}</p>
+        <p>Powered by {providerInfo.provider || 'Ollama'} &middot; {settings.model || providerInfo.model || 'qwen3.5:9b'}</p>
       </footer>
 
       {showSettings && (
@@ -309,6 +326,13 @@ function App() {
           settings={settings}
           onSave={handleSaveSettings}
           onClose={() => setShowSettings(false)}
+        />
+      )}
+
+      {showStyleEditor && (
+        <StyleEditor
+          onClose={() => setShowStyleEditor(false)}
+          onStylesChange={reloadCustomStyles}
         />
       )}
     </div>

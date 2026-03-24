@@ -130,12 +130,17 @@ export async function streamRefine(
   return controller
 }
 
-export async function healthCheck(): Promise<boolean> {
+export async function healthCheck(): Promise<{ online: boolean; provider?: string; model?: string; availableProviders?: string[] }> {
   try {
     const { data } = await api.get('/api/health')
-    return data.status === 'ok'
+    return {
+      online: data.status === 'ok',
+      provider: data.provider,
+      model: data.model,
+      availableProviders: data.available_providers,
+    }
   } catch {
-    return false
+    return { online: false }
   }
 }
 
@@ -151,6 +156,50 @@ export async function fetchModels(): Promise<ModelsResult> {
   } catch {
     return { models: [], default: '' }
   }
+}
+
+// ---------- Custom styles CRUD ----------
+
+export interface CustomStyleItem {
+  id: number
+  name: string
+  slug: string
+  prompt_template: string
+  description: string
+  created_at: string
+  updated_at: string
+}
+
+export async function fetchCustomStyles(): Promise<CustomStyleItem[]> {
+  try {
+    const { data } = await api.get<CustomStyleItem[]>('/api/styles')
+    return data
+  } catch {
+    return []
+  }
+}
+
+export async function createCustomStyle(body: {
+  name: string
+  slug: string
+  prompt_template: string
+  description?: string
+}): Promise<CustomStyleItem> {
+  const { data } = await api.post<CustomStyleItem>('/api/styles', body)
+  return data
+}
+
+export async function updateCustomStyle(id: number, body: {
+  name?: string
+  prompt_template?: string
+  description?: string
+}): Promise<CustomStyleItem> {
+  const { data } = await api.put<CustomStyleItem>(`/api/styles/${id}`, body)
+  return data
+}
+
+export async function deleteCustomStyle(id: number): Promise<void> {
+  await api.delete(`/api/styles/${id}`)
 }
 
 export interface UploadResult {

@@ -9,6 +9,7 @@ import {
 } from '../types'
 import type { ContentMode, WritingRequest } from '../types'
 import { uploadFile } from '../services/api'
+import type { CustomStyleItem } from '../services/api'
 import { getTemplates, addTemplate, removeTemplate } from '../services/templates'
 import type { PromptTemplate } from '../services/templates'
 import './WritingForm.css'
@@ -19,11 +20,13 @@ interface Props {
   onStop: () => void
   online: boolean | null
   unsplashKey?: string
+  customStyles?: CustomStyleItem[]
+  onOpenStyleEditor?: () => void
 }
 
 const ACCEPT_TYPES = '.pdf,.docx,.doc,.pptx,.ppt,.txt,.md,.csv,.json,.xml,.html,.htm'
 
-export default function WritingForm({ onSubmit, loading, onStop, online, unsplashKey: _unsplashKey }: Props) {
+export default function WritingForm({ onSubmit, loading, onStop, online, unsplashKey: _unsplashKey, customStyles = [], onOpenStyleEditor }: Props) {
   const [mode, setMode] = useState<ContentMode>('text')
   const [taskType, setTaskType] = useState<TaskType>(TaskType.GENERATE)
   const [content, setContent] = useState('')
@@ -239,7 +242,22 @@ export default function WritingForm({ onSubmit, loading, onStop, online, unsplas
               {TEXT_STYLE_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>{o.label}</option>
               ))}
+              {customStyles.length > 0 && (
+                <optgroup label="自定义风格">
+                  {customStyles.map((s) => (
+                    <option key={s.slug} value={s.slug}>{s.name}</option>
+                  ))}
+                </optgroup>
+              )}
             </select>
+            {onOpenStyleEditor && (
+              <button
+                className="btn-style-manage"
+                onClick={onOpenStyleEditor}
+                disabled={loading}
+                title="管理自定义风格"
+              >+</button>
+            )}
           </label>
         )}
 

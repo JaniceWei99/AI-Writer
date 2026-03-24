@@ -394,7 +394,12 @@ def _append_attachment(prompt: str, attachment_text: str) -> str:
     return prompt
 
 
-def build_prompt(task_type: str, content: str, style: str = "", target_lang: str = "英文", attachment_text: str = "") -> str:
+def build_prompt(task_type: str, content: str, style: str = "", target_lang: str = "英文", attachment_text: str = "", custom_prompt_template: str = "") -> str:
+    # If a custom prompt template is provided (from DB), use it directly
+    if custom_prompt_template:
+        prompt = custom_prompt_template.format(content=content)
+        return _append_attachment(prompt, attachment_text)
+
     style_instruction = STYLE_MAP.get(style, f"- 使用{style}风格" if style else "")
 
     if task_type == "generate":

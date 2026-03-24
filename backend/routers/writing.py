@@ -5,18 +5,33 @@ from urllib.parse import quote
 
 from fastapi import APIRouter, File, UploadFile, HTTPException
 from fastapi.responses import StreamingResponse
+from sqlalchemy import select
 from models.schemas import WritingRequest, WritingResponse, ExportRequest, ExportPptxRequest, RefineRequest
+from models.custom_style import CustomStyle
 from prompts.writing import build_prompt, build_refine_prompt, is_poetry_request, validate_poetry
-from services.ollama_client import generate, generate_stream, DEFAULT_MODEL
+from services.llm_provider import generate, generate_stream, get_default_model
 from services.file_parser import extract_text
 from services.docx_export import markdown_to_docx
 from services.pdf_export import markdown_to_pdf
 from services.pptx_export import markdown_to_pptx, _parse_slides
+from db import async_session
 
 router = APIRouter(prefix="/api/writing", tags=["writing"])
 logger = logging.getLogger("app.writing")
 
 MAX_POETRY_RETRIES = 3
+
+
+async def _get_custom_prompt(style: str) -> str:
+    """Look up a custom style template from DB. Returns empty string if not found."""
+    if not style:
+        return ""
+    async with async_session() as session:
+        row = await session.execute(
+            select(CustomStyle.prompt_template).where(CustomStyle.slug == style)
+        )
+        result = row.scalar_one_or_none()
+        return result or ""
 
 
 @router.post("/upload")
@@ -38,15 +53,18 @@ async def upload_file(file: UploadFile = File(...)):
 @router.post("/process", response_model=WritingResponse)
 async def process_writing(req: WritingRequest):
     """非流式处理写作请求，返回完整结果。"""
-    logger.info("Process request: task=%s model=%s content_len=%d", req.task_type.value, req.model or DEFAULT_MODEL, len(req.content))
+    default_model = get_default_model()
+    logger.info("Process request: task=%s model=%s content_len=%d", req.task_type.value, req.model or default_model, len(req.content))
+    custom_tpl = await _get_custom_prompt(req.style)
     prompt = build_prompt(
         task_type=req.task_type.value,
         content=req.content,
         style=req.style,
         target_lang=req.target_lang,
         attachment_text=req.attachment_text,
+        custom_prompt_template=custom_tpl,
     )
-    model = req.model or DEFAULT_MODEL
+    model = req.model or default_model
     temp = req.temperature
 
     is_poetry = req.task_type.value == "generate" and is_poetry_request(req.content)
@@ -67,9 +85,11 @@ async def process_writing(req: WritingRequest):
 @router.post("/stream")
 async def stream_writing(req: WritingRequest):
     """流式处理写作请求，实时返回文本。"""
-    logger.info("Stream request: task=%s model=%s content_len=%d", req.task_type.value, req.model or DEFAULT_MODEL, len(req.content))
-    is_poetry = req.task_type.value == "generate" and is_poetry_request(req.content)
-    model = req.model or DEFAULT_MODEL
+    default_model = get_default_model()
+    logger.info("Stream request: task=%s model=%s content_len=%d", req.task_type.value, req.model or default_model, len(req.content))
+    custom_tpl = await _get_custom_prompt(req.style)
+    is_poetry = req.task_type.value == "generate" and is_poetry_request(req.content) and not custom_tpl
+    model = req.model or default_model
     temp = req.temperature
 
     if is_poetry:
@@ -99,6 +119,7 @@ async def stream_writing(req: WritingRequest):
         style=req.style,
         target_lang=req.target_lang,
         attachment_text=req.attachment_text,
+        custom_prompt_template=custom_tpl,
     )
 
     async def event_generator():
@@ -113,7 +134,7 @@ async def stream_writing(req: WritingRequest):
 async def refine_writing(req: RefineRequest):
     """流式处理继续对话/修改请求，根据用户反馈优化之前的结果。"""
     logger.info("Refine request: feedback_len=%d prev_len=%d", len(req.feedback), len(req.previous_result))
-    model = req.model or DEFAULT_MODEL
+    model = req.model or get_default_model()
     temp = req.temperature
     prompt = build_refine_prompt(req.previous_result, req.feedback)
 
