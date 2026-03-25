@@ -46,6 +46,7 @@ export const STYLE_OPTIONS = [
   { value: 'xiaohongshu', label: '小红书爆款' },
   { value: 'gongzhonghao', label: '公众号文案' },
   { value: 'toutiao', label: '头条文案' },
+  { value: 'zhihu', label: '知乎回答' },
   { value: 'ai_drama', label: 'AI短剧脚本' },
   { value: 'ppt', label: '生成PPT' },
 ]
@@ -57,6 +58,7 @@ export const TEXT_STYLE_OPTIONS = [
   { value: 'xiaohongshu', label: '小红书爆款' },
   { value: 'gongzhonghao', label: '公众号文案' },
   { value: 'toutiao', label: '头条文案' },
+  { value: 'zhihu', label: '知乎回答' },
   { value: 'ai_drama', label: 'AI短剧脚本' },
 ]
 
@@ -68,6 +70,18 @@ export const LANG_OPTIONS = [
   { value: '法文', label: '法文' },
   { value: '德文', label: '德文' },
 ]
+
+export const STYLE_LABELS: Record<string, string> = {
+  '': '默认',
+  literary: '文学',
+  sh_gaokao: '上海高考作文',
+  xiaohongshu: '小红书爆款',
+  gongzhonghao: '公众号文案',
+  toutiao: '头条文案',
+  zhihu: '知乎回答',
+  ai_drama: 'AI短剧脚本',
+  ppt: 'PPT',
+}
 
 export const PPT_TEMPLATE_OPTIONS = [
   { value: 'business', label: '商务蓝' },

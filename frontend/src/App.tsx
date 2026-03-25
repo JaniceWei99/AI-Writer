@@ -306,6 +306,7 @@ function App() {
             onSelect={handleSelectHistory}
             onDelete={handleDeleteHistory}
             onClear={handleClearHistory}
+            customStyles={customStyles}
           />
         </aside>
 

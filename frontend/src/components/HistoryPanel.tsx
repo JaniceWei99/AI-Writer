@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
-import { TASK_LABELS } from '../types'
+import { TASK_LABELS, STYLE_LABELS } from '../types'
 import type { HistoryItem } from '../types'
+import type { CustomStyleItem } from '../services/api'
 import ConfirmDialog from './ConfirmDialog'
 import './HistoryPanel.css'
 
@@ -10,6 +11,7 @@ interface Props {
   onSelect: (item: HistoryItem) => void
   onDelete: (id: string) => void
   onClear: () => void
+  customStyles?: CustomStyleItem[]
 }
 
 function formatTime(iso: string): string {
@@ -23,7 +25,7 @@ function preview(text: string, max = 30): string {
   return line.length > max ? line.slice(0, max) + '...' : line
 }
 
-export default function HistoryPanel({ items, activeId, onSelect, onDelete, onClear }: Props) {
+export default function HistoryPanel({ items, activeId, onSelect, onDelete, onClear, customStyles = [] }: Props) {
   const [keyword, setKeyword] = useState('')
   const [showConfirm, setShowConfirm] = useState(false)
 
@@ -66,6 +68,9 @@ export default function HistoryPanel({ items, activeId, onSelect, onDelete, onCl
         <ul className="history-list">
           {filtered.map((item) => {
             const isPpt = item.style === 'ppt'
+            const styleLabel = STYLE_LABELS[item.style]
+              || customStyles.find((s) => s.slug === item.style)?.name
+              || item.style
             return (
             <li
               key={item.id}
@@ -73,9 +78,14 @@ export default function HistoryPanel({ items, activeId, onSelect, onDelete, onCl
               onClick={() => onSelect(item)}
             >
               <div className="history-item-top">
-                <span className={`history-tag ${isPpt ? 'history-tag-ppt' : ''}`}>
-                  {isPpt ? 'PPT' : TASK_LABELS[item.task_type]}
-                </span>
+                <div className="history-tags">
+                  <span className={`history-tag ${isPpt ? 'history-tag-ppt' : ''}`}>
+                    {isPpt ? 'PPT' : TASK_LABELS[item.task_type]}
+                  </span>
+                  {item.style && item.style !== 'ppt' && (
+                    <span className="history-tag history-tag-style">{styleLabel}</span>
+                  )}
+                </div>
                 <span className="history-time">{formatTime(item.created_at)}</span>
               </div>
               <div className="history-preview">{preview(item.content)}</div>
