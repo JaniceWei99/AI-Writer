@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 写作助手 — 竞品分析报告</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --bg2: #161922;
+    --bg3: #1e2130;
+    --border: #2a2d3a;
+    --text: #a0a4b8;
+    --text-h: #e4e6f0;
+    --accent: #6366f1;
+    --accent2: #818cf8;
+    --green: #22c55e;
+    --yellow: #eab308;
+    --orange: #f97316;
+    --red: #ef4444;
+    --cyan: #06b6d4;
+    --pink: #ec4899;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  /* Header */
+  .report-header {
+    text-align: center;
+    padding: 60px 0 48px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 48px;
+  }
+  .report-header h1 {
+    font-size: 36px;
+    color: var(--text-h);
+    margin-bottom: 12px;
+    letter-spacing: -0.5px;
+  }
+  .report-header .subtitle { font-size: 16px; color: var(--text); }
+  .report-header .version-badge {
+    display: inline-block;
+    margin-top: 16px;
+    padding: 6px 18px;
+    border-radius: 20px;
+    background: rgba(99,102,241,0.15);
+    color: var(--accent2);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  /* Section headings */
+  .section { margin-bottom: 48px; }
+  .section-num {
+    display: inline-block;
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: var(--accent);
+    color: #fff;
+    text-align: center;
+    line-height: 32px;
+    font-size: 14px;
+    font-weight: 700;
+    margin-right: 10px;
+    vertical-align: middle;
+  }
+  h2 {
+    font-size: 22px;
+    color: var(--text-h);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  h3 { font-size: 17px; color: var(--text-h); margin: 24px 0 12px; }
+
+  /* Cards */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+  }
+  .stat-card {
+    background: var(--bg3);
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+  }
+  .stat-card .num { font-size: 36px; font-weight: 700; color: var(--accent2); }
+  .stat-card .label { font-size: 13px; margin-top: 4px; }
+
+  /* Status pills */
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .pill-done { background: rgba(34,197,94,0.15); color: var(--green); }
+  .pill-partial { background: rgba(234,179,8,0.15); color: var(--yellow); }
+  .pill-missing { background: rgba(239,68,68,0.12); color: var(--red); }
+  .pill-accent { background: rgba(99,102,241,0.15); color: var(--accent2); }
+
+  /* Tables */
+  .table-wrap { overflow-x: auto; margin-bottom: 20px; border-radius: 10px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead { background: var(--bg3); }
+  th { padding: 12px 14px; text-align: left; color: var(--text-h); font-weight: 600; white-space: nowrap; border-bottom: 1px solid var(--border); }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: rgba(99,102,241,0.04); }
+  .row-highlight { background: rgba(99,102,241,0.08) !important; }
+  td.check { color: var(--green); text-align: center; font-weight: 700; }
+  td.cross { color: #555; text-align: center; }
+  td.partial { color: var(--yellow); text-align: center; }
+
+  /* Stars */
+  .stars { letter-spacing: 2px; }
+  .star-on { color: var(--yellow); }
+  .star-off { color: #333; }
+
+  /* Trend items */
+  .trend-list { display: flex; flex-direction: column; gap: 12px; }
+  .trend-item {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    padding: 14px 16px;
+    background: var(--bg3);
+    border-radius: 8px;
+  }
+  .trend-icon {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .trend-text { font-size: 14px; line-height: 1.6; }
+  .trend-text b { color: var(--text-h); }
+
+  /* Progress bars */
+  .progress-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .progress-label { width: 100px; font-size: 13px; color: var(--text); flex-shrink: 0; text-align: right; }
+  .progress-track { flex: 1; height: 8px; background: var(--bg3); border-radius: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+  .progress-val { width: 28px; font-size: 13px; font-weight: 600; flex-shrink: 0; }
+
+  /* Roadmap */
+  .roadmap { position: relative; padding-left: 28px; }
+  .roadmap::before {
+    content: '';
+    position: absolute;
+    left: 12px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--border);
+  }
+  .roadmap-item { position: relative; margin-bottom: 24px; }
+  .roadmap-dot {
+    position: absolute;
+    left: -22px;
+    top: 6px;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+    background: var(--bg);
+  }
+  .roadmap-item.p0 .roadmap-dot { background: var(--accent); }
+  .roadmap-item.p1 .roadmap-dot { background: var(--cyan); border-color: var(--cyan); }
+  .roadmap-item.p2 .roadmap-dot { background: transparent; border-color: var(--text); }
+  .roadmap-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-h);
+    margin-bottom: 4px;
+  }
+  .roadmap-desc { font-size: 13px; line-height: 1.6; }
+  .roadmap-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-right: 6px;
+  }
+  .tag-p0 { background: rgba(99,102,241,0.2); color: var(--accent2); }
+  .tag-p1 { background: rgba(6,182,212,0.2); color: var(--cyan); }
+  .tag-p2 { background: rgba(160,164,184,0.15); color: var(--text); }
+
+  /* Quadrant chart */
+  .quadrant-container {
+    display: flex;
+    justify-content: center;
+    padding: 20px 0;
+  }
+  .quadrant {
+    position: relative;
+    width: 520px;
+    height: 420px;
+    background: var(--bg3);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .quadrant .axis-x {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--border);
+  }
+  .quadrant .axis-y {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--border);
+  }
+  .quadrant .label-top,
+  .quadrant .label-bottom,
+  .quadrant .label-left,
+  .quadrant .label-right {
+    position: absolute;
+    font-size: 11px;
+    color: var(--text);
+    opacity: 0.6;
+  }
+  .quadrant .label-top { top: 8px; left: 50%; transform: translateX(-50%); }
+  .quadrant .label-bottom { bottom: 8px; left: 50%; transform: translateX(-50%); }
+  .quadrant .label-left { left: 8px; top: 50%; transform: translateY(-50%); }
+  .quadrant .label-right { right: 8px; top: 50%; transform: translateY(-50%); }
+  .q-dot {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    z-index: 2;
+  }
+  .q-dot .dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--text);
+  }
+  .q-dot .dot.ours { width: 16px; height: 16px; background: var(--accent); box-shadow: 0 0 12px rgba(99,102,241,0.5); }
+  .q-dot .dot.target { width: 16px; height: 16px; background: transparent; border: 2px dashed var(--accent2); }
+  .q-dot .name { font-size: 11px; white-space: nowrap; color: var(--text-h); }
+  .q-arrow {
+    position: absolute;
+    z-index: 1;
+  }
+
+  /* Summary boxes */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+  }
+  .summary-card {
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg2);
+  }
+  .summary-card .rank {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .summary-card .stitle {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-h);
+    margin-bottom: 4px;
+  }
+  .summary-card .sdesc { font-size: 13px; line-height: 1.5; }
+
+  /* Tabs for two analyses */
+  .tab-bar {
+    display: flex;
+    gap: 4px;
+    background: var(--bg3);
+    padding: 4px;
+    border-radius: 10px;
+    width: fit-content;
+    margin-bottom: 32px;
+  }
+  .tab-btn {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 500;
+    font-family: inherit;
+  }
+  .tab-btn:hover { color: var(--text-h); }
+  .tab-btn.active {
+    background: var(--bg);
+    color: var(--accent2);
+    font-weight: 600;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* Quote */
+  .callout {
+    background: rgba(99,102,241,0.08);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .container { padding: 20px 16px 60px; }
+    .report-header h1 { font-size: 26px; }
+    .card-grid { grid-template-columns: 1fr 1fr; }
+    .quadrant { width: 100%; height: 320px; }
+    table { font-size: 12px; }
+    th, td { padding: 8px 10px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="report-header">
+    <h1>AI 写作助手 — 竞品分析报告</h1>
+    <div class="subtitle">项目版本 v1.3.1 &middot; 完成 P0 + P1 全部 6 项改进后的竞争力评估</div>
+    <div class="version-badge">2026-03-25 更新</div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('latest')">2026-03-25 最新分析</button>
+    <button class="tab-btn" onclick="switchTab('previous')">2026-03-24 首次分析</button>
+  </div>
+
+  <!-- ========== TAB 1: Latest ========== -->
+  <div id="tab-latest" class="tab-content active">
+
+    <!-- Stat cards -->
+    <div class="section">
+      <div class="card-grid">
+        <div class="stat-card">
+          <div class="num" style="color: var(--green)">6 / 6</div>
+          <div class="label">改进建议已完成</div>
+        </div>
+        <div class="stat-card">
+          <div class="num">10</div>
+          <div class="label">竞品对比对象</div>
+        </div>
+        <div class="stat-card">
+          <div class="num">14</div>
+          <div class="label">功能对比维度</div>
+        </div>
+        <div class="stat-card">
+          <div class="num" style="color: var(--yellow)">10</div>
+          <div class="label">新一轮改进建议</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 1: Iteration recap -->
+    <div class="section">
+      <h2><span class="section-num">1</span> 本次迭代新增能力</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>序号</th><th>功能</th><th>来源</th><th>状态</th></tr></thead>
+          <tbody>
+            <tr class="row-highlight"><td>P0-1</td><td>多轮对话式修改（继续优化）</td><td>上轮建议</td><td><span class="pill pill-done">&#10003; 已完成</span></td></tr>
+            <tr class="row-highlight"><td>P0-2</td><td>用户自定义风格模板（StyleEditor）</td><td>上轮建议</td><td><span class="pill pill-done">&#10003; 已完成</span></td></tr>
+            <tr class="row-highlight"><td>P0-3</td><td>多 LLM Provider 支持（Ollama / OpenAI / DeepSeek / Qwen）</td><td>上轮建议</td><td><span class="pill pill-done">&#10003; 已完成</span></td></tr>
+            <tr><td>P1-4</td><td>文本质量评分面板（纯算法可读性评分 0-100）</td><td>上轮建议</td><td><span class="pill pill-done">&#10003; 已完成</span></td></tr>
+            <tr><td>P1-5</td><td>长文分章节生成（大纲 &rarr; 逐章展开）</td><td>上轮建议</td><td><span class="pill pill-done">&#10003; 已完成</span></td></tr>
+            <tr><td>P1-6</td><td>简易用户认证系统（JWT + 历史隔离）</td><td>上轮建议</td><td><span class="pill pill-done">&#10003; 已完成</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Section 2: Competitor overview -->
+    <div class="section">
+      <h2><span class="section-num">2</span> 竞品概览（2026-03 更新）</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>产品</th><th>定位</th><th>核心模型</th><th>私有化</th><th>免费</th><th>费用</th></tr></thead>
+          <tbody>
+            <tr class="row-highlight"><td style="color:var(--accent2);font-weight:700">本项目</td><td>本地全能写作 + PPT + 质量评分</td><td>Ollama / OpenAI / DeepSeek / Qwen</td><td class="check">&#10003;</td><td>完全免费</td><td style="color:var(--green);font-weight:700">&#165;0</td></tr>
+            <tr><td>Notion AI</td><td>AI 工作空间（文档 + Agent + 搜索）</td><td>GPT-4o / Claude / 多模型</td><td class="cross">&mdash;</td><td>试用额度</td><td>$12/月起</td></tr>
+            <tr><td>Jasper AI</td><td>企业营销 AI 平台（Agent + Pipeline）</td><td>多模型路由（30+ 语言）</td><td class="cross">&mdash;</td><td>7 天试用</td><td>$69/月/席</td></tr>
+            <tr><td>Copy.ai</td><td>GTM AI 工作流</td><td>GPT-4 / 多模型</td><td class="cross">&mdash;</td><td>有免费额度</td><td>$49/月起</td></tr>
+            <tr><td>ChatGPT</td><td>通用对话式 AI</td><td>GPT-4o / o1 / o3</td><td class="cross">&mdash;</td><td>有免费版</td><td>$20/月</td></tr>
+            <tr><td>DeepSeek</td><td>通用推理 / 写作 AI</td><td>DeepSeek-V3 / R1</td><td class="partial">开源可</td><td>有免费额度</td><td>API 按量</td></tr>
+            <tr><td>Kimi</td><td>长上下文中文 AI</td><td>Moonshot（128K&ndash;1M）</td><td class="cross">&mdash;</td><td>免费</td><td>免费</td></tr>
+            <tr><td>文心一言</td><td>百度中文 AI 助手</td><td>文心大模型 4.5</td><td class="partial">企业版</td><td>免费</td><td>企业版付费</td></tr>
+            <tr><td>秘塔写作猫</td><td>中文写作纠错 / 润色</td><td>自研模型</td><td class="cross">&mdash;</td><td>有免费额度</td><td>付费订阅</td></tr>
+            <tr><td>Gamma.app</td><td>AI 演示文稿生成</td><td>GPT-4 + 自研渲染</td><td class="cross">&mdash;</td><td>有免费额度</td><td>$10/月起</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>行业变化趋势</h3>
+      <div class="trend-list">
+        <div class="trend-item">
+          <div class="trend-icon" style="background:rgba(99,102,241,0.15);color:var(--accent2)">N</div>
+          <div class="trend-text"><b>Notion AI</b> 从"文档内嵌辅助"升级为"AI Agent 工作空间"，推出 Custom Agents、企业搜索、AI 会议纪要。定价嵌入 Agent 信用点体系。</div>
+        </div>
+        <div class="trend-item">
+          <div class="trend-icon" style="background:rgba(236,72,153,0.15);color:var(--pink)">J</div>
+          <div class="trend-text"><b>Jasper</b> 从"文案生成器"转型为"营销 Agent 平台"，核心卖点：Content Pipeline + 100+ 专用 Agent。价格上涨至 $69/席位。</div>
+        </div>
+        <div class="trend-item">
+          <div class="trend-icon" style="background:rgba(6,182,212,0.15);color:var(--cyan)">D</div>
+          <div class="trend-text"><b>DeepSeek</b> 以开源 + 高性价比破局，V3/R1 推理能力接近 GPT-4，且支持本地部署。已成为本项目 multi-provider 重要选项。</div>
+        </div>
+        <div class="trend-item">
+          <div class="trend-icon" style="background:rgba(234,179,8,0.15);color:var(--yellow)">K</div>
+          <div class="trend-text"><b>Kimi</b> 持续强化长上下文能力（128K &rarr; 1M token），在长文理解/写作场景上有天然优势。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 3: Feature comparison -->
+    <div class="section">
+      <h2><span class="section-num">3</span> 核心功能对比</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>功能维度</th><th style="color:var(--accent2)">本项目</th><th>Notion AI</th><th>Jasper</th><th>ChatGPT</th><th>DeepSeek</th><th>Kimi</th><th>Gamma</th></tr></thead>
+          <tbody>
+            <tr><td>文章生成</td><td style="color:var(--text-h)">8 内置 + 自定义</td><td>通用</td><td>100+ Agent</td><td>通用</td><td>通用</td><td>通用</td><td class="cross">&mdash;</td></tr>
+            <tr><td>中文平台风格</td><td class="check">6 种专属 &#10003;</td><td class="cross">&mdash;</td><td>英文为主</td><td>需手动</td><td>需手动</td><td>需手动</td><td class="cross">&mdash;</td></tr>
+            <tr><td>多轮对话优化</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="cross">&mdash;</td></tr>
+            <tr><td>长文分章节</td><td class="check">&#10003; 大纲&rarr;逐章</td><td class="check">&#10003; Agent</td><td class="check">&#10003; Pipeline</td><td>手动分段</td><td>手动分段</td><td class="check">&#10003; 长上下文</td><td class="cross">&mdash;</td></tr>
+            <tr><td>文本质量评分</td><td class="check">&#10003; 0-100</td><td class="cross">&mdash;</td><td>SEO 评分</td><td class="cross">&mdash;</td><td class="cross">&mdash;</td><td class="cross">&mdash;</td><td class="cross">&mdash;</td></tr>
+            <tr><td>PPT 生成</td><td class="check">6 版式 4 主题 &#10003;</td><td class="cross">&mdash;</td><td class="cross">&mdash;</td><td class="cross">&mdash;</td><td class="cross">&mdash;</td><td class="cross">&mdash;</td><td class="check">&#10003; 核心</td></tr>
+            <tr><td>诗词格律校验</td><td class="check">&#10003; 自动重试</td><td class="cross">&mdash;</td><td class="cross">&mdash;</td><td class="cross">&mdash;</td><td class="cross">&mdash;</td><td class="cross">&mdash;</td><td class="cross">&mdash;</td></tr>
+            <tr><td>导出格式</td><td style="color:var(--text-h)">5 种</td><td>原生文档</td><td>复制/下载</td><td>复制</td><td>复制</td><td>复制</td><td>PPT/PDF</td></tr>
+            <tr><td>文件上传</td><td style="color:var(--text-h)">8 种格式</td><td>原生文档</td><td>有限</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="cross">&mdash;</td></tr>
+            <tr><td>用户系统</td><td class="check">&#10003; JWT</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+            <tr><td>模型可选</td><td style="color:var(--text-h)">4 家 Provider</td><td>多模型</td><td>多模型</td><td>自家</td><td>自家</td><td>自家</td><td>自家</td></tr>
+            <tr><td>本地运行</td><td class="check">&#10003; 原生</td><td class="cross">&mdash;</td><td class="cross">&mdash;</td><td class="cross">&mdash;</td><td class="partial">可(开源)</td><td class="cross">&mdash;</td><td class="cross">&mdash;</td></tr>
+            <tr><td>数据隐私</td><td class="check">本机不出 &#10003;</td><td>云端</td><td>云端</td><td>云端</td><td class="partial">本地可</td><td>云端</td><td>云端</td></tr>
+            <tr><td>费用</td><td style="color:var(--green);font-weight:700">&#165;0</td><td>$12+/月</td><td>$69+/月</td><td>$20/月</td><td>按量</td><td>免费</td><td>$10+/月</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Section 4: Gap assessment -->
+    <div class="section">
+      <h2><span class="section-num">4</span> 竞争力变化评估</h2>
+
+      <h3>已补齐的短板</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>原劣势</th><th>当前状态</th><th>评估</th></tr></thead>
+          <tbody>
+            <tr><td><s>缺少多轮对话</s></td><td>P0-1 已实现"继续优化"功能</td><td><span class="pill pill-done">&#10003; 已补齐</span></td></tr>
+            <tr><td><s>缺少 SEO/评估能力</s></td><td>P1-4 已实现质量评分面板</td><td><span class="pill pill-partial">&#9888; 部分补齐</span></td></tr>
+            <tr><td><s>单用户架构</s></td><td>P1-6 已实现 JWT 用户系统 + 历史隔离</td><td><span class="pill pill-done">&#10003; 已补齐</span></td></tr>
+            <tr><td><s>缺少模板市场</s></td><td>P0-2 已实现自定义风格模板 + 编辑器</td><td><span class="pill pill-partial">&#9888; 部分补齐</span></td></tr>
+            <tr><td><s>没有长文接力</s></td><td>P1-5 已实现大纲 &rarr; 逐章节展开</td><td><span class="pill pill-done">&#10003; 已补齐</span></td></tr>
+            <tr><td><s>缺少文本质量分析</s></td><td>P1-4 已实现 4 维度评分</td><td><span class="pill pill-done">&#10003; 已补齐</span></td></tr>
+            <tr><td>模型能力天花板</td><td>P0-3 已支持 OpenAI/DeepSeek/Qwen</td><td><span class="pill pill-partial">&#9888; 大幅缓解</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>当前优势矩阵</h3>
+      <div class="card">
+        <div class="progress-row"><div class="progress-label">数据隐私</div><div class="progress-track"><div class="progress-fill" style="width:100%;background:var(--green)"></div></div><div class="progress-val" style="color:var(--green)">5/5</div></div>
+        <div class="progress-row"><div class="progress-label">零成本</div><div class="progress-track"><div class="progress-fill" style="width:100%;background:var(--green)"></div></div><div class="progress-val" style="color:var(--green)">5/5</div></div>
+        <div class="progress-row"><div class="progress-label">PPT 生成</div><div class="progress-track"><div class="progress-fill" style="width:80%;background:var(--accent2)"></div></div><div class="progress-val" style="color:var(--accent2)">4/5</div></div>
+        <div class="progress-row"><div class="progress-label">中文平台风格</div><div class="progress-track"><div class="progress-fill" style="width:80%;background:var(--accent2)"></div></div><div class="progress-val" style="color:var(--accent2)">4/5</div></div>
+        <div class="progress-row"><div class="progress-label">混合模型策略</div><div class="progress-track"><div class="progress-fill" style="width:80%;background:var(--accent2)"></div></div><div class="progress-val" style="color:var(--accent2)">4/5</div></div>
+        <div class="progress-row"><div class="progress-label">导出能力</div><div class="progress-track"><div class="progress-fill" style="width:80%;background:var(--accent2)"></div></div><div class="progress-val" style="color:var(--accent2)">4/5</div></div>
+        <div class="progress-row"><div class="progress-label">长文写作</div><div class="progress-track"><div class="progress-fill" style="width:60%;background:var(--yellow)"></div></div><div class="progress-val" style="color:var(--yellow)">3/5</div></div>
+        <div class="progress-row"><div class="progress-label">质量分析</div><div class="progress-track"><div class="progress-fill" style="width:60%;background:var(--yellow)"></div></div><div class="progress-val" style="color:var(--yellow)">3/5</div></div>
+        <div class="progress-row"><div class="progress-label">诗词校验</div><div class="progress-track"><div class="progress-fill" style="width:60%;background:var(--yellow)"></div></div><div class="progress-val" style="color:var(--yellow)">3/5</div></div>
+      </div>
+
+      <h3>当前劣势</h3>
+      <div class="card">
+        <div class="progress-row"><div class="progress-label" style="color:var(--red)">AI Agent</div><div class="progress-track"><div class="progress-fill" style="width:100%;background:var(--red)"></div></div><div class="progress-val" style="color:var(--red)">5/5</div></div>
+        <div class="progress-row"><div class="progress-label" style="color:var(--orange)">团队协作</div><div class="progress-track"><div class="progress-fill" style="width:80%;background:var(--orange)"></div></div><div class="progress-val" style="color:var(--orange)">4/5</div></div>
+        <div class="progress-row"><div class="progress-label" style="color:var(--orange)">SEO 数据</div><div class="progress-track"><div class="progress-fill" style="width:80%;background:var(--orange)"></div></div><div class="progress-val" style="color:var(--orange)">4/5</div></div>
+        <div class="progress-row"><div class="progress-label" style="color:var(--yellow)">实时协作</div><div class="progress-track"><div class="progress-fill" style="width:60%;background:var(--yellow)"></div></div><div class="progress-val" style="color:var(--yellow)">3/5</div></div>
+        <div class="progress-row"><div class="progress-label" style="color:var(--yellow)">内容安全</div><div class="progress-track"><div class="progress-fill" style="width:60%;background:var(--yellow)"></div></div><div class="progress-val" style="color:var(--yellow)">3/5</div></div>
+        <div class="progress-row"><div class="progress-label">移动端</div><div class="progress-track"><div class="progress-fill" style="width:40%;background:var(--text)"></div></div><div class="progress-val">2/5</div></div>
+      </div>
+    </div>
+
+    <!-- Section 5: Quadrant -->
+    <div class="section">
+      <h2><span class="section-num">5</span> 竞争格局矩阵</h2>
+      <div class="quadrant-container">
+        <div class="quadrant">
+          <div class="axis-x"></div>
+          <div class="axis-y"></div>
+          <div class="label-top">高功能丰富度</div>
+          <div class="label-bottom">低功能丰富度</div>
+          <div class="label-left">高隐私/低成本</div>
+          <div class="label-right">低隐私/高成本</div>
+
+          <div class="q-dot" style="left:62%;top:16%"><div class="dot"></div><div class="name">Notion AI</div></div>
+          <div class="q-dot" style="left:78%;top:14%"><div class="dot"></div><div class="name">Jasper</div></div>
+          <div class="q-dot" style="left:60%;top:28%"><div class="dot"></div><div class="name">ChatGPT</div></div>
+          <div class="q-dot" style="left:40%;top:36%"><div class="dot"></div><div class="name">Kimi</div></div>
+          <div class="q-dot" style="left:35%;top:44%"><div class="dot"></div><div class="name">DeepSeek</div></div>
+          <div class="q-dot" style="left:60%;top:68%"><div class="dot"></div><div class="name">Copy.ai</div></div>
+          <div class="q-dot" style="left:65%;top:78%"><div class="dot"></div><div class="name">Gamma</div></div>
+          <div class="q-dot" style="left:40%;top:72%"><div class="dot"></div><div class="name">秘塔写作猫</div></div>
+
+          <!-- Us -->
+          <div class="q-dot" style="left:48%;top:35%"><div class="dot ours"></div><div class="name" style="color:var(--accent2);font-weight:700">本项目</div></div>
+          <!-- Target -->
+          <div class="q-dot" style="left:38%;top:20%"><div class="dot target"></div><div class="name" style="color:var(--accent2);opacity:0.7;font-style:italic">目标位置</div></div>
+
+          <!-- Arrow -->
+          <svg class="q-arrow" style="left:0;top:0;width:100%;height:100%;position:absolute;pointer-events:none">
+            <defs><marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#6366f1" opacity="0.6"/></marker></defs>
+            <line x1="47%" y1="34%" x2="40%" y2="23%" stroke="#6366f1" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.5" marker-end="url(#arrowhead)"/>
+          </svg>
+        </div>
+      </div>
+      <div class="callout">本项目当前处于"高隐私 + 中等功能"象限。通过工作流引擎和 SEO 能力建设，目标是向<b>左上方"高隐私 + 高功能"</b>移动，在保持核心优势的同时缩小与头部产品的功能差距。</div>
+    </div>
+
+    <!-- Section 6: Roadmap -->
+    <div class="section">
+      <h2><span class="section-num">6</span> 新一轮改进建议</h2>
+      <div class="callout">策略：上一轮 P0/P1 已补齐基础短板。本轮聚焦 <b>(A) 跟进行业 Agent 化趋势</b>、<b>(B) 深化差异化优势</b>。</div>
+
+      <div class="roadmap">
+        <div class="roadmap-item p0">
+          <div class="roadmap-dot"></div>
+          <div class="roadmap-title"><span class="roadmap-tag tag-p0">P0</span>写作工作流（简易 Agent）</div>
+          <div class="roadmap-desc">串联已有接口（大纲 &rarr; 逐章展开 &rarr; 润色）为自动化流水线。前端显示进度条，每步可暂停/手动干预。投入产出比最高，底层接口已就绪。</div>
+        </div>
+        <div class="roadmap-item p0">
+          <div class="roadmap-dot"></div>
+          <div class="roadmap-title"><span class="roadmap-tag tag-p0">P0</span>内容安全基线</div>
+          <div class="roadmap-desc">敏感词库过滤（AC 自动机） + 安全评分 + 配置开关。纯算法实现，零延迟。企业/教育部署的准入门槛。</div>
+        </div>
+        <div class="roadmap-item p0">
+          <div class="roadmap-dot"></div>
+          <div class="roadmap-title"><span class="roadmap-tag tag-p0">P0</span>多语言 UI 国际化（i18n）</div>
+          <div class="roadmap-desc">react-i18next 实现前端中英双语切换。拓宽海外用户群 &mdash; 隐私 + 免费的核心优势对全球开发者均有吸引力。</div>
+        </div>
+
+        <div class="roadmap-item p1">
+          <div class="roadmap-dot"></div>
+          <div class="roadmap-title"><span class="roadmap-tag tag-p1">P1</span>SEO 写作辅助</div>
+          <div class="roadmap-desc">扩展质量评分面板：关键词密度、标题命中、元描述长度。纯算法对标 Jasper SEO Agent 核心卖点，零成本。</div>
+        </div>
+        <div class="roadmap-item p1">
+          <div class="roadmap-dot"></div>
+          <div class="roadmap-title"><span class="roadmap-tag tag-p1">P1</span>批量生成 + 导出</div>
+          <div class="roadmap-desc">上传 CSV 或多主题输入 &rarr; 队列式生成 &rarr; ZIP 打包下载。覆盖自媒体矩阵运营、电商批量文案场景。</div>
+        </div>
+        <div class="roadmap-item p1">
+          <div class="roadmap-dot"></div>
+          <div class="roadmap-title"><span class="roadmap-tag tag-p1">P1</span>模板市场（社区共享）</div>
+          <div class="roadmap-desc">模板增加 is_public 标记 + 浏览/预览/一键克隆。从单机工具进化为有网络效应的平台。</div>
+        </div>
+        <div class="roadmap-item p1">
+          <div class="roadmap-dot"></div>
+          <div class="roadmap-title"><span class="roadmap-tag tag-p1">P1</span>Diff 可视化对比</div>
+          <div class="roadmap-desc">润色/翻译任务逐字 diff 高亮（diff-match-patch，&lt;10KB）。实现成本极低，用户体验提升显著。</div>
+        </div>
+
+        <div class="roadmap-item p2">
+          <div class="roadmap-dot"></div>
+          <div class="roadmap-title"><span class="roadmap-tag tag-p2">P2</span>团队空间与协同</div>
+          <div class="roadmap-desc">Team 模型 + 成员管理 + 角色权限 + 共享项目空间。从"个人工具"到"团队平台"的关键一步。</div>
+        </div>
+        <div class="roadmap-item p2">
+          <div class="roadmap-dot"></div>
+          <div class="roadmap-title"><span class="roadmap-tag tag-p2">P2</span>写作 Copilot（行内补全）</div>
+          <div class="roadmap-desc">编辑模式下 AI 实时灰色虚影建议，Tab 接受。类似 GitHub Copilot，大幅提升用户粘性。</div>
+        </div>
+        <div class="roadmap-item p2">
+          <div class="roadmap-dot"></div>
+          <div class="roadmap-title"><span class="roadmap-tag tag-p2">P2</span>数据分析仪表盘</div>
+          <div class="roadmap-desc">个人统计（生成次数、总字数、常用风格、质量趋势）+ 时间维度图表。增加用户回访动力。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 7: Summary -->
+    <div class="section">
+      <h2><span class="section-num">7</span> 总结与优先级</h2>
+      <div class="callout">经过 P0/P1 两轮迭代，<b>当前最大的竞争力缺口已从"基础功能缺失"转移到"自动化工作流"和"团队协作"</b>。</div>
+      <div class="summary-grid">
+        <div class="summary-card">
+          <div class="rank" style="color:var(--accent2)">01</div>
+          <div class="stitle">写作工作流</div>
+          <div class="sdesc">投入产出比最高，底层接口已就绪，前端编排即可上线。</div>
+        </div>
+        <div class="summary-card">
+          <div class="rank" style="color:var(--green)">02</div>
+          <div class="stitle">内容安全基线</div>
+          <div class="sdesc">企业部署准入门槛，纯算法实现，零外部依赖。</div>
+        </div>
+        <div class="summary-card">
+          <div class="rank" style="color:var(--cyan)">03</div>
+          <div class="stitle">SEO 写作辅助</div>
+          <div class="sdesc">运营场景高频需求，扩展已有评分面板。</div>
+        </div>
+        <div class="summary-card">
+          <div class="rank" style="color:var(--yellow)">04</div>
+          <div class="stitle">Diff 可视化</div>
+          <div class="sdesc">实现成本极低，用户体验提升显著。</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ========== TAB 2: Previous ========== -->
+  <div id="tab-previous" class="tab-content">
+
+    <div class="section">
+      <h2><span class="section-num">1</span> 竞品概览</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>产品</th><th>定位</th><th>模型</th><th>私有化</th><th>免费</th><th>数据隐私</th></tr></thead>
+          <tbody>
+            <tr class="row-highlight"><td style="color:var(--accent2);font-weight:700">本项目</td><td>本地全能写作 + PPT</td><td>Ollama 本地</td><td class="check">&#10003;</td><td>完全免费</td><td style="color:var(--green)">不出本机</td></tr>
+            <tr><td>秘塔写作猫</td><td>中文写作纠错/润色</td><td>自研</td><td class="cross">&mdash;</td><td>有额度</td><td>云端</td></tr>
+            <tr><td>Notion AI</td><td>文档内嵌 AI 辅助</td><td>GPT-4/Claude</td><td class="cross">&mdash;</td><td>$10/月</td><td>云端</td></tr>
+            <tr><td>Jasper AI</td><td>营销文案批量生成</td><td>GPT-4/自研</td><td class="cross">&mdash;</td><td>无免费版</td><td>云端 SaaS</td></tr>
+            <tr><td>Copy.ai</td><td>营销/社媒文案</td><td>GPT-4</td><td class="cross">&mdash;</td><td>有额度</td><td>云端 SaaS</td></tr>
+            <tr><td>ChatGPT</td><td>通用对话式写作</td><td>GPT-4o</td><td class="cross">&mdash;</td><td>有免费版</td><td>云端</td></tr>
+            <tr><td>文心一言</td><td>通用中文写作</td><td>文心大模型</td><td class="partial">企业版</td><td>免费</td><td>云端</td></tr>
+            <tr><td>讯飞星火</td><td>中文写作/办公</td><td>星火大模型</td><td class="partial">企业版</td><td>有额度</td><td>云端</td></tr>
+            <tr><td>Kimi</td><td>长文本理解/写作</td><td>Moonshot</td><td class="cross">&mdash;</td><td>免费</td><td>云端</td></tr>
+            <tr><td>Gamma.app</td><td>AI 生成 PPT</td><td>GPT-4</td><td class="cross">&mdash;</td><td>有额度</td><td>云端 SaaS</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2><span class="section-num">2</span> 核心功能对比</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>功能维度</th><th style="color:var(--accent2)">本项目</th><th>秘塔写作猫</th><th>Jasper/Copy.ai</th><th>Notion AI</th><th>ChatGPT</th><th>Gamma</th></tr></thead>
+          <tbody>
+            <tr><td>文章生成</td><td>8 种风格</td><td>通用</td><td>50+ 模板</td><td>通用</td><td>通用</td><td class="cross">&mdash;</td></tr>
+            <tr><td>平台风格</td><td class="check">6 种专属</td><td class="cross">&mdash;</td><td>英文为主</td><td class="cross">&mdash;</td><td>需手动</td><td class="cross">&mdash;</td></tr>
+            <tr><td>文本润色</td><td class="check">&#10003;</td><td style="color:var(--text-h)">核心功能</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="cross">&mdash;</td></tr>
+            <tr><td>多语言翻译</td><td>6 种语言</td><td>中英</td><td>25+ 语言</td><td>多语言</td><td>多语言</td><td class="cross">&mdash;</td></tr>
+            <tr><td>PPT 生成</td><td class="check">6 版式 4 主题</td><td class="cross">&mdash;</td><td class="cross">&mdash;</td><td class="cross">&mdash;</td><td class="cross">&mdash;</td><td class="check">核心</td></tr>
+            <tr><td>诗词格律</td><td class="check">&#10003; 自动重试</td><td class="cross">&mdash;</td><td class="cross">&mdash;</td><td class="cross">&mdash;</td><td class="cross">&mdash;</td><td class="cross">&mdash;</td></tr>
+            <tr><td>导出格式</td><td>5 种</td><td>复制</td><td>复制/下载</td><td>原生文档</td><td>复制</td><td>PPT/PDF</td></tr>
+            <tr><td>本地运行</td><td class="check">&#10003;</td><td class="cross">&mdash;</td><td class="cross">&mdash;</td><td class="cross">&mdash;</td><td class="cross">&mdash;</td><td class="cross">&mdash;</td></tr>
+            <tr><td>数据隐私</td><td class="check">不出本机</td><td>云端</td><td>云端</td><td>云端</td><td>云端</td><td>云端</td></tr>
+            <tr><td>费用</td><td style="color:var(--green);font-weight:700">&#165;0</td><td>有付费墙</td><td>$49-125/月</td><td>$10/月</td><td>$20/月</td><td>$10/月</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2><span class="section-num">3</span> 优势分析</h2>
+      <div class="card-grid">
+        <div class="stat-card" style="text-align:left;padding:18px">
+          <div style="font-size:20px;margin-bottom:4px">&#128274;</div>
+          <div style="font-weight:700;color:var(--text-h);margin-bottom:4px">数据隐私 — 最大护城河</div>
+          <div style="font-size:13px">完全本地运行，数据不出本机。对涉密内容写作场景极有吸引力。</div>
+        </div>
+        <div class="stat-card" style="text-align:left;padding:18px">
+          <div style="font-size:20px;margin-bottom:4px">&#128202;</div>
+          <div style="font-weight:700;color:var(--text-h);margin-bottom:4px">PPT 生成 — 独特差异化</div>
+          <div style="font-size:13px">6 版式 4 主题 + 自动配图。写作工具中非常罕见的能力。</div>
+        </div>
+        <div class="stat-card" style="text-align:left;padding:18px">
+          <div style="font-size:20px;margin-bottom:4px">&#127464;&#127475;</div>
+          <div style="font-weight:700;color:var(--text-h);margin-bottom:4px">中文平台风格 — 本土化深度</div>
+          <div style="font-size:13px">小红书、公众号、头条、知乎等专属 prompt，国外工具不覆盖。</div>
+        </div>
+        <div class="stat-card" style="text-align:left;padding:18px">
+          <div style="font-size:20px;margin-bottom:4px">&#128176;</div>
+          <div style="font-weight:700;color:var(--text-h);margin-bottom:4px">零成本 + 零门槛</div>
+          <div style="font-size:13px">不需要 API Key、不需要付费、不需要注册。一键启动。</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2><span class="section-num">4</span> 劣势分析（当时）</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>劣势</th><th>说明</th><th>后续修复</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>模型能力天花板</td><td>本地 9B 模型 vs GPT-4o</td><td><span class="pill pill-partial">P0-3 缓解</span></td></tr>
+            <tr><td>2</td><td>缺少多轮对话</td><td>一次生成模式</td><td><span class="pill pill-done">P0-1 &#10003;</span></td></tr>
+            <tr><td>3</td><td>缺少 SEO 评估</td><td>只做生成，没有评估</td><td><span class="pill pill-done">P1-4 &#10003;</span></td></tr>
+            <tr><td>4</td><td>单用户架构</td><td>无登录/注册</td><td><span class="pill pill-done">P1-6 &#10003;</span></td></tr>
+            <tr><td>5</td><td>缺少模板市场</td><td>风格靠代码硬编码</td><td><span class="pill pill-done">P0-2 &#10003;</span></td></tr>
+            <tr><td>6</td><td>没有长文接力</td><td>context window 限制</td><td><span class="pill pill-done">P1-5 &#10003;</span></td></tr>
+            <tr><td>7</td><td>缺少质量分析</td><td>无可读性评分</td><td><span class="pill pill-done">P1-4 &#10003;</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2><span class="section-num">5</span> 改进建议（当时）</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>优先级</th><th>编号</th><th>建议</th><th>执行状态</th></tr></thead>
+          <tbody>
+            <tr><td><span class="roadmap-tag tag-p0">P0</span></td><td>1</td><td>多轮对话式修改</td><td><span class="pill pill-done">&#10003; 已完成</span></td></tr>
+            <tr><td><span class="roadmap-tag tag-p0">P0</span></td><td>2</td><td>用户自定义风格模板</td><td><span class="pill pill-done">&#10003; 已完成</span></td></tr>
+            <tr><td><span class="roadmap-tag tag-p0">P0</span></td><td>3</td><td>支持接入云端 API</td><td><span class="pill pill-done">&#10003; 已完成</span></td></tr>
+            <tr><td><span class="roadmap-tag tag-p1">P1</span></td><td>4</td><td>文本质量评分面板</td><td><span class="pill pill-done">&#10003; 已完成</span></td></tr>
+            <tr><td><span class="roadmap-tag tag-p1">P1</span></td><td>5</td><td>长文分章节生成</td><td><span class="pill pill-done">&#10003; 已完成</span></td></tr>
+            <tr><td><span class="roadmap-tag tag-p1">P1</span></td><td>6</td><td>简易用户系统</td><td><span class="pill pill-done">&#10003; 已完成</span></td></tr>
+            <tr><td><span class="roadmap-tag tag-p2">P2</span></td><td>7</td><td>对比差异可视化</td><td><span class="pill pill-accent">待实施</span></td></tr>
+            <tr><td><span class="roadmap-tag tag-p2">P2</span></td><td>8</td><td>批量生成</td><td><span class="pill pill-accent">待实施</span></td></tr>
+            <tr><td><span class="roadmap-tag tag-p2">P2</span></td><td>9</td><td>插件式风格系统</td><td><span class="pill pill-accent">待实施</span></td></tr>
+            <tr><td><span class="roadmap-tag tag-p2">P2</span></td><td>10</td><td>写作 Copilot 模式</td><td><span class="pill pill-accent">待实施</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2><span class="section-num">6</span> 当时结论</h2>
+      <div class="callout">本项目在<b>数据隐私</b>、<b>PPT 生成</b>、<b>中文平台风格</b>三个维度上有独特优势，最大的短板是<b>缺少多轮迭代修改</b>和<b>模型质量天花板</b>。建议优先实现 P0 中的"多轮对话"和"支持云端 API"。<br><br><b style="color:var(--green)">更新：以上 P0 + P1 共 6 项建议已全部完成。</b></div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+function switchTab(name) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>
