@@ -4,10 +4,14 @@ import ResultPanel from './components/ResultPanel'
 import HistoryPanel from './components/HistoryPanel'
 import SettingsPanel, { loadSettings, saveSettings } from './components/SettingsPanel'
 import StyleEditor from './components/StyleEditor'
+import LongFormPanel from './components/LongFormPanel'
+import AuthPanel from './components/AuthPanel'
 import type { AppSettings } from './components/SettingsPanel'
 import { streamWriting, streamRefine, healthCheck, fetchCustomStyles } from './services/api'
 import type { CustomStyleItem } from './services/api'
 import { getHistory, addHistory, removeHistory, clearHistory } from './services/history'
+import { getUser, fetchMe } from './services/auth'
+import type { AuthUser } from './services/auth'
 import type { WritingRequest, HistoryItem } from './types'
 import './App.css'
 
@@ -55,6 +59,13 @@ function App() {
   // Sidebar collapse (mobile)
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
+  // Auth
+  const [authUser, setAuthUser] = useState<AuthUser | null>(getUser)
+
+  // Mode: standard writing vs long-form
+  type WritingMode = 'standard' | 'longform'
+  const [writingMode, setWritingMode] = useState<WritingMode>('standard')
+
   // Apply theme on mount and change
   useEffect(() => {
     applyTheme(theme)
@@ -68,6 +79,7 @@ function App() {
     })
     getHistory().then(setHistory).catch(() => {})
     fetchCustomStyles().then(setCustomStyles)
+    fetchMe().then((u) => { if (u) setAuthUser(u) })
   }, [])
 
   // Global keyboard shortcuts
@@ -246,6 +258,12 @@ function App() {
     fetchCustomStyles().then(setCustomStyles)
   }, [])
 
+  const handleAuthChange = useCallback((user: AuthUser | null) => {
+    setAuthUser(user)
+    // Refresh history for the new user context
+    getHistory().then(setHistory).catch(() => {})
+  }, [])
+
   const cycleTheme = () => {
     setTheme((prev) => {
       const order: Theme[] = ['auto', 'light', 'dark']
@@ -267,6 +285,7 @@ function App() {
           <h1>AI 写作助手</h1>
         </div>
         <div className="header-actions">
+          <AuthPanel user={authUser} onAuthChange={handleAuthChange} />
           <button className="theme-toggle" onClick={cycleTheme} title={THEME_LABELS[theme]}>
             {THEME_ICONS[theme]}
           </button>
@@ -291,29 +310,54 @@ function App() {
         </aside>
 
         <main className="app-main">
-          <WritingForm
-            onSubmit={handleSubmit}
-            loading={loading}
-            onStop={handleStop}
-            online={online}
-            unsplashKey={settings.unsplashKey}
-            customStyles={customStyles}
-            onOpenStyleEditor={() => setShowStyleEditor(true)}
-          />
-          <ResultPanel
-            result={result}
-            loading={loading}
-            tokenCount={tokenCount}
-            error={error}
-            onRegenerate={handleRegenerate}
-            onRetry={handleRetry}
-            onRefine={handleRefine}
-            onResultChange={handleResultChange}
-            originalContent={originalContent}
-            taskType={lastTaskType}
-            style={lastStyle}
-            unsplashKey={settings.unsplashKey}
-          />
+          <div className="mode-tabs">
+            <button
+              className={`mode-tab ${writingMode === 'standard' ? 'active' : ''}`}
+              onClick={() => setWritingMode('standard')}
+            >
+              标准写作
+            </button>
+            <button
+              className={`mode-tab ${writingMode === 'longform' ? 'active' : ''}`}
+              onClick={() => setWritingMode('longform')}
+            >
+              长文写作
+            </button>
+          </div>
+
+          {writingMode === 'standard' ? (
+            <>
+              <WritingForm
+                onSubmit={handleSubmit}
+                loading={loading}
+                onStop={handleStop}
+                online={online}
+                unsplashKey={settings.unsplashKey}
+                customStyles={customStyles}
+                onOpenStyleEditor={() => setShowStyleEditor(true)}
+              />
+              <ResultPanel
+                result={result}
+                loading={loading}
+                tokenCount={tokenCount}
+                error={error}
+                onRegenerate={handleRegenerate}
+                onRetry={handleRetry}
+                onRefine={handleRefine}
+                onResultChange={handleResultChange}
+                originalContent={originalContent}
+                taskType={lastTaskType}
+                style={lastStyle}
+                unsplashKey={settings.unsplashKey}
+              />
+            </>
+          ) : (
+            <LongFormPanel
+              model={settings.model}
+              temperature={settings.temperature}
+              online={online}
+            />
+          )}
         </main>
       </div>
 

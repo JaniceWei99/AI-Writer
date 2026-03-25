@@ -8,6 +8,8 @@ from fastapi.responses import FileResponse
 from routers.writing import router as writing_router
 from routers.history import router as history_router
 from routers.styles import router as styles_router
+from routers.auth import router as auth_router
+from routers.analysis import router as analysis_router
 from db import init_db
 from logging_config import setup_logging
 from middleware import RequestLoggingMiddleware
@@ -50,6 +52,8 @@ app.add_middleware(RateLimitMiddleware, max_requests=10, window_seconds=60)
 app.include_router(writing_router)
 app.include_router(history_router)
 app.include_router(styles_router)
+app.include_router(auth_router)
+app.include_router(analysis_router)
 
 
 @app.get("/api/health")

@@ -1,9 +1,16 @@
 import axios from 'axios'
 import type { HistoryItem } from '../types'
+import { getToken } from './auth'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE || '',
   timeout: 10_000,
+})
+
+api.interceptors.request.use((config) => {
+  const token = getToken()
+  if (token) config.headers.Authorization = `Bearer ${token}`
+  return config
 })
 
 export async function getHistory(): Promise<HistoryItem[]> {

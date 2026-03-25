@@ -114,6 +114,39 @@
   min-width: 0;
 }
 
+/* Writing mode tabs */
+.mode-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--code-bg);
+  padding: 4px;
+  border-radius: 10px;
+  width: fit-content;
+}
+
+.mode-tab {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.mode-tab:hover {
+  color: var(--text-h);
+}
+
+.mode-tab.active {
+  background: var(--bg);
+  color: var(--accent);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
 .app-footer {
   padding: 20px 0;
   margin-top: 32px;

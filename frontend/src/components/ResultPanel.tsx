@@ -3,6 +3,7 @@ import Markdown from 'react-markdown'
 import { downloadDocx, downloadTxt, downloadMd, downloadPdf, downloadPptx } from '../services/api'
 import { TaskType, PPT_TEMPLATE_OPTIONS } from '../types'
 import './ResultPanel.css'
+import QualityPanel from './QualityPanel'
 
 interface Props {
   result: string
@@ -302,6 +303,7 @@ export default function ResultPanel({
           </button>
         </div>
       )}
+      {result && !loading && <QualityPanel content={result} />}
     </div>
   )
 }

@@ -6,9 +6,9 @@ from urllib.parse import quote
 from fastapi import APIRouter, File, UploadFile, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy import select
-from models.schemas import WritingRequest, WritingResponse, ExportRequest, ExportPptxRequest, RefineRequest
+from models.schemas import WritingRequest, WritingResponse, ExportRequest, ExportPptxRequest, RefineRequest, OutlineRequest, ExpandChapterRequest
 from models.custom_style import CustomStyle
-from prompts.writing import build_prompt, build_refine_prompt, is_poetry_request, validate_poetry
+from prompts.writing import build_prompt, build_refine_prompt, build_outline_prompt, build_expand_chapter_prompt, is_poetry_request, validate_poetry
 from services.llm_provider import generate, generate_stream, get_default_model
 from services.file_parser import extract_text
 from services.docx_export import markdown_to_docx
@@ -137,6 +137,38 @@ async def refine_writing(req: RefineRequest):
     model = req.model or get_default_model()
     temp = req.temperature
     prompt = build_refine_prompt(req.previous_result, req.feedback)
+
+    async def event_generator():
+        async for token in generate_stream(prompt, model=model, temperature=temp):
+            yield f"data: {json.dumps(token)}\n\n"
+        yield "data: [DONE]\n\n"
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+
+@router.post("/outline")
+async def generate_outline(req: OutlineRequest):
+    """流式生成文章大纲，用于长文分章节写作。"""
+    logger.info("Outline request: content_len=%d style=%s", len(req.content), req.style)
+    model = req.model or get_default_model()
+    temp = req.temperature
+    prompt = build_outline_prompt(req.content, req.style)
+
+    async def event_generator():
+        async for token in generate_stream(prompt, model=model, temperature=temp):
+            yield f"data: {json.dumps(token)}\n\n"
+        yield "data: [DONE]\n\n"
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+
+@router.post("/expand-chapter")
+async def expand_chapter(req: ExpandChapterRequest):
+    """流式展开单个章节内容。"""
+    logger.info("Expand chapter: title=%s outline_len=%d", req.chapter_title, len(req.outline))
+    model = req.model or get_default_model()
+    temp = req.temperature
+    prompt = build_expand_chapter_prompt(req.outline, req.chapter_title, req.chapter_desc, req.style)
 
     async def event_generator():
         async for token in generate_stream(prompt, model=model, temperature=temp):

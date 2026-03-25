@@ -52,3 +52,19 @@ class ExportPptxRequest(BaseModel):
     template: str = "business"
     with_images: bool = False
     unsplash_key: str = ""
+
+
+class OutlineRequest(BaseModel):
+    content: str
+    style: str = ""
+    model: str = ""
+    temperature: Optional[float] = None
+
+
+class ExpandChapterRequest(BaseModel):
+    outline: str
+    chapter_title: str
+    chapter_desc: str = ""
+    style: str = ""
+    model: str = ""
+    temperature: Optional[float] = None
