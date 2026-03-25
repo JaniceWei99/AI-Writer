@@ -10,18 +10,18 @@
 
 ## 接口概览
 
-| 方法   | 路径                      | 说明                          |
-| ------ | ------------------------- | ----------------------------- |
-| GET    | `/api/health`             | 健康检查                      |
-| POST   | `/api/writing/upload`     | 上传文件并提取文本内容        |
-| POST   | `/api/writing/process`    | 非流式处理写作请求            |
-| POST   | `/api/writing/stream`     | 流式处理写作请求（SSE）       |
-| POST   | `/api/writing/export-docx`| 将 Markdown 导出为 Word 文档  |
-| POST   | `/api/writing/export-pdf` | 将 Markdown 导出为 PDF 文档   |
-| GET    | `/api/history`            | 获取历史记录列表              |
-| POST   | `/api/history`            | 新增历史记录                  |
-| DELETE | `/api/history/{id}`       | 删除单条历史记录              |
-| DELETE | `/api/history`            | 清空全部历史记录              |
+| 方法   | 路径                       | 说明                         |
+| ------ | -------------------------- | ---------------------------- |
+| GET    | `/api/health`              | 健康检查                     |
+| POST   | `/api/writing/upload`      | 上传文件并提取文本内容       |
+| POST   | `/api/writing/process`     | 非流式处理写作请求           |
+| POST   | `/api/writing/stream`      | 流式处理写作请求（SSE）      |
+| POST   | `/api/writing/export-docx` | 将 Markdown 导出为 Word 文档 |
+| POST   | `/api/writing/export-pdf`  | 将 Markdown 导出为 PDF 文档  |
+| GET    | `/api/history`             | 获取历史记录列表             |
+| POST   | `/api/history`             | 新增历史记录                 |
+| DELETE | `/api/history/{id}`        | 删除单条历史记录             |
+| DELETE | `/api/history`             | 清空全部历史记录             |
 
 ---
 
@@ -58,9 +58,9 @@ curl http://localhost:8000/api/health
 
 **Content-Type：** `multipart/form-data`
 
-| 字段   | 类型       | 必填 | 说明               |
-| ------ | ---------- | ---- | ------------------ |
-| `file` | UploadFile | 是   | 待上传的文件       |
+| 字段   | 类型       | 必填 | 说明         |
+| ------ | ---------- | ---- | ------------ |
+| `file` | UploadFile | 是   | 待上传的文件 |
 
 **支持的文件格式：** `.pdf`、`.docx`、`.doc`、`.txt`、`.md`、`.csv`、`.json`、`.xml`、`.html`、`.htm`
 
@@ -76,18 +76,18 @@ curl http://localhost:8000/api/health
 }
 ```
 
-| 字段         | 类型   | 说明                   |
-| ------------ | ------ | ---------------------- |
-| `filename`   | string | 上传的文件名           |
-| `text`       | string | 提取出的文本内容       |
-| `char_count` | int    | 提取文本的字符数       |
+| 字段         | 类型   | 说明             |
+| ------------ | ------ | ---------------- |
+| `filename`   | string | 上传的文件名     |
+| `text`       | string | 提取出的文本内容 |
+| `char_count` | int    | 提取文本的字符数 |
 
 #### 错误响应
 
-| 状态码 | 说明                                      |
-| ------ | ----------------------------------------- |
-| `400`  | 不支持的文件类型，或文件缺少文件名        |
-| `500`  | 文件解析失败（文件损坏或内部错误）        |
+| 状态码 | 说明                               |
+| ------ | ---------------------------------- |
+| `400`  | 不支持的文件类型，或文件缺少文件名 |
+| `500`  | 文件解析失败（文件损坏或内部错误） |
 
 #### 示例
 
@@ -118,37 +118,37 @@ curl -X POST http://localhost:8000/api/writing/upload \
 }
 ```
 
-| 字段              | 类型   | 必填 | 默认值   | 说明                                 |
-| ----------------- | ------ | ---- | -------- | ------------------------------------ |
-| `task_type`       | string | 是   | —        | 任务类型，见下方枚举值               |
-| `content`         | string | 是   | —        | 用户输入的文本内容或写作指令         |
-| `style`           | string | 否   | `""`     | 写作风格，见下方枚举值               |
-| `target_lang`     | string | 否   | `"英文"` | 翻译目标语言（仅 `translate` 时生效）|
-| `attachment_text`  | string | 否   | `""`     | 附件文本（通过上传接口获取）         |
+| 字段              | 类型   | 必填 | 默认值   | 说明                                   |
+| ----------------- | ------ | ---- | -------- | -------------------------------------- |
+| `task_type`       | string | 是   | —        | 任务类型，见下方枚举值                 |
+| `content`         | string | 是   | —        | 用户输入的文本内容或写作指令           |
+| `style`           | string | 否   | `""`     | 写作风格，见下方枚举值                 |
+| `target_lang`     | string | 否   | `"英文"` | 翻译目标语言（仅 `translate` 时生效）  |
+| `attachment_text` | string | 否   | `""`     | 附件文本（通过上传接口获取）           |
 | `model`           | string | 否   | `""`     | 自定义模型名称，为空则使用服务端默认值 |
-| `temperature`     | number | 否   | `null`   | 生成温度（0-2），null 使用模型默认值 |
+| `temperature`     | number | 否   | `null`   | 生成温度（0-2），null 使用模型默认值   |
 
 **`task_type` 枚举值：**
 
-| 值           | 说明                         |
-| ------------ | ---------------------------- |
-| `generate`   | 根据指令生成全新文本         |
-| `polish`     | 对已有文本进行润色优化       |
-| `translate`  | 将文本翻译为目标语言         |
-| `summarize`  | 对长文本进行摘要提炼         |
+| 值          | 说明                   |
+| ----------- | ---------------------- |
+| `generate`  | 根据指令生成全新文本   |
+| `polish`    | 对已有文本进行润色优化 |
+| `translate` | 将文本翻译为目标语言   |
+| `summarize` | 对长文本进行摘要提炼   |
 
 **`style` 枚举值：**
 
-| 值             | 说明                     |
-| -------------- | ------------------------ |
-| `""`（空字符串）| 默认风格                |
-| `literary`     | 文学创作风格             |
-| `sh_gaokao`    | 上海高考作文风格         |
-| `xiaohongshu`  | 小红书风格               |
-| `gongzhonghao` | 微信公众号风格           |
-| `toutiao`      | 今日头条风格             |
-| `ai_drama`     | AI 短剧脚本风格          |
-| `ppt`          | 生成 PPT 大纲风格        |
+| 值               | 说明              |
+| ---------------- | ----------------- |
+| `""`（空字符串） | 默认风格          |
+| `literary`       | 文学创作风格      |
+| `sh_gaokao`      | 上海高考作文风格  |
+| `xiaohongshu`    | 小红书风格        |
+| `gongzhonghao`   | 微信公众号风格    |
+| `toutiao`        | 今日头条风格      |
+| `ai_drama`       | AI 短剧脚本风格   |
+| `ppt`            | 生成 PPT 大纲风格 |
 
 ```json
 {
@@ -201,15 +201,15 @@ curl -X POST http://localhost:8000/api/writing/process \
 
 请求体与 `/api/writing/process` 完全相同。
 
-| 字段              | 类型   | 必填 | 默认值   | 说明                                 |
-| ----------------- | ------ | ---- | -------- | ------------------------------------ |
-| `task_type`       | string | 是   | —        | 任务类型                             |
-| `content`         | string | 是   | —        | 用户输入的文本内容或写作指令         |
-| `style`           | string | 否   | `""`     | 写作风格                             |
-| `target_lang`     | string | 否   | `"英文"` | 翻译目标语言（仅 `translate` 时生效）|
-| `attachment_text`  | string | 否   | `""`     | 附件文本                             |
-| `model`           | string | 否   | `""`     | 自定义模型名称                       |
-| `temperature`     | number | 否   | `null`   | 生成温度（0-2）                      |
+| 字段              | 类型   | 必填 | 默认值   | 说明                                  |
+| ----------------- | ------ | ---- | -------- | ------------------------------------- |
+| `task_type`       | string | 是   | —        | 任务类型                              |
+| `content`         | string | 是   | —        | 用户输入的文本内容或写作指令          |
+| `style`           | string | 否   | `""`     | 写作风格                              |
+| `target_lang`     | string | 否   | `"英文"` | 翻译目标语言（仅 `translate` 时生效） |
+| `attachment_text` | string | 否   | `""`     | 附件文本                              |
+| `model`           | string | 否   | `""`     | 自定义模型名称                        |
+| `temperature`     | number | 否   | `null`   | 生成温度（0-2）                       |
 
 #### 响应
 
@@ -232,7 +232,7 @@ data: [DONE]
 
 | 事件内容       | 说明                              |
 | -------------- | --------------------------------- |
-| `data: "..."` | 单个文本 token（JSON 字符串格式） |
+| `data: "..."`  | 单个文本 token（JSON 字符串格式） |
 | `data: [DONE]` | 流式传输结束标志                  |
 
 #### 示例
@@ -265,7 +265,7 @@ curl -X POST http://localhost:8000/api/writing/stream \
 
 | 字段      | 类型   | 必填 | 说明                                 |
 | --------- | ------ | ---- | ------------------------------------ |
-| `content`  | string | 是   | Markdown 格式的文本内容             |
+| `content` | string | 是   | Markdown 格式的文本内容              |
 | `title`   | string | 否   | 文档标题（用于文件名和文档内部标题） |
 
 #### 响应
@@ -302,10 +302,10 @@ curl -X POST http://localhost:8000/api/writing/export-docx \
 }
 ```
 
-| 字段      | 类型   | 必填 | 说明                                 |
-| --------- | ------ | ---- | ------------------------------------ |
-| `content`  | string | 是   | Markdown 格式的文本内容             |
-| `title`   | string | 否   | 文档标题（用于文件名）               |
+| 字段      | 类型   | 必填 | 说明                    |
+| --------- | ------ | ---- | ----------------------- |
+| `content` | string | 是   | Markdown 格式的文本内容 |
+| `title`   | string | 否   | 文档标题（用于文件名）  |
 
 #### 响应
 
@@ -338,11 +338,11 @@ curl -X POST http://localhost:8000/api/writing/export-pdf \
 
 ##### 请求参数（Query）
 
-| 参数      | 类型   | 默认值 | 说明                             |
-| --------- | ------ | ------ | -------------------------------- |
-| `keyword` | string | —      | 搜索关键词（匹配内容和结果）     |
-| `limit`   | int    | 200    | 每页数量（1-1000）               |
-| `offset`  | int    | 0      | 偏移量                           |
+| 参数      | 类型   | 默认值 | 说明                         |
+| --------- | ------ | ------ | ---------------------------- |
+| `keyword` | string | —      | 搜索关键词（匹配内容和结果） |
+| `limit`   | int    | 200    | 每页数量（1-1000）           |
+| `offset`  | int    | 0      | 偏移量                       |
 
 ##### 响应
 
@@ -387,13 +387,13 @@ curl "http://localhost:8000/api/history?keyword=AI&limit=10"
 }
 ```
 
-| 字段           | 类型   | 必填 | 说明         |
-| -------------- | ------ | ---- | ------------ |
-| `task_type`    | string | 是   | 任务类型     |
-| `content`      | string | 是   | 输入内容     |
-| `result`       | string | 否   | 生成结果     |
-| `style`        | string | 否   | 写作风格     |
-| `token_count`  | int    | 否   | Token 数量   |
+| 字段          | 类型   | 必填 | 说明       |
+| ------------- | ------ | ---- | ---------- |
+| `task_type`   | string | 是   | 任务类型   |
+| `content`     | string | 是   | 输入内容   |
+| `result`      | string | 否   | 生成结果   |
+| `style`       | string | 否   | 写作风格   |
+| `token_count` | int    | 否   | Token 数量 |
 
 ##### 响应（201 Created）
 
@@ -435,15 +435,15 @@ curl -X DELETE http://localhost:8000/api/history
 
 ### 常见 HTTP 状态码
 
-| 状态码 | 说明                             |
-| ------ | -------------------------------- |
-| `200`  | 请求成功                         |
-| `201`  | 资源创建成功（新增历史记录）     |
-| `204`  | 操作成功，无返回内容（删除操作） |
-| `400`  | 请求参数错误（如不支持的文件类型）|
-| `422`  | 请求体验证失败（字段缺失或类型错误）|
-| `429`  | 请求过于频繁（AI 生成端点限流：每 IP 每分钟最多 10 次）|
-| `500`  | 服务器内部错误                   |
+| 状态码 | 说明                                                    |
+| ------ | ------------------------------------------------------- |
+| `200`  | 请求成功                                                |
+| `201`  | 资源创建成功（新增历史记录）                            |
+| `204`  | 操作成功，无返回内容（删除操作）                        |
+| `400`  | 请求参数错误（如不支持的文件类型）                      |
+| `422`  | 请求体验证失败（字段缺失或类型错误）                    |
+| `429`  | 请求过于频繁（AI 生成端点限流：每 IP 每分钟最多 10 次） |
+| `500`  | 服务器内部错误                                          |
 
 ### 限流说明
 

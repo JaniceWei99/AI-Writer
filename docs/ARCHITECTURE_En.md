@@ -13,12 +13,12 @@ The AI Writing Assistant is an intelligent writing tool powered by a **local lar
 └─────────────────┘                       └─────────────────┘                └───────────┘
 ```
 
-| Layer | Tech Stack | Responsibilities |
-|-------|-----------|-----------------|
-| **Front-end** | React 19 + TypeScript + Vite | User interaction, task selection, streaming result display, history management, dark mode, settings panel |
-| **Back-end** | FastAPI + Pydantic + httpx + SQLAlchemy + aiosqlite | Route dispatching, prompt construction, Ollama invocation, file parsing, document export, history persistence, logging/rate-limiting middleware |
-| **Database** | SQLite (backend/data/app.db) | Persistent history storage |
-| **Model Service** | Ollama (qwen3.5:9b) | Local large language model inference |
+| Layer             | Tech Stack                                          | Responsibilities                                                                                                                                |
+| ----------------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Front-end**     | React 19 + TypeScript + Vite                        | User interaction, task selection, streaming result display, history management, dark mode, settings panel                                       |
+| **Back-end**      | FastAPI + Pydantic + httpx + SQLAlchemy + aiosqlite | Route dispatching, prompt construction, Ollama invocation, file parsing, document export, history persistence, logging/rate-limiting middleware |
+| **Database**      | SQLite (backend/data/app.db)                        | Persistent history storage                                                                                                                      |
+| **Model Service** | Ollama (qwen3.5:9b)                                 | Local large language model inference                                                                                                            |
 
 ---
 
@@ -111,60 +111,60 @@ my_first/
 
 ### `models/schemas.py` — Data Models
 
-| Model | Description |
-|-------|-------------|
-| `TaskType(str, Enum)` | Task type enum: `generate`, `polish`, `translate`, `summarize` |
-| `WritingRequest` | Writing request body: `task_type`, `content`, `style`, `target_lang`, `attachment_text`, `model` (optional), `temperature` (optional) |
-| `WritingResponse` | Writing response body: `task_type`, `result` (generated text), `token_count` |
-| `ExportRequest` | Export request body: `content` (Markdown content), `title` (document title) |
-| `ExportPptxRequest` | PPTX export request body: `content`, `title`, `template` (theme template), `with_images` (whether to include images), `unsplash_key` |
-| `HistoryCreate` | History creation request: `task_type`, `content`, `result`, `style`, `token_count` |
-| `HistoryOut` | History response: includes full fields such as `id`, `created_at`, etc. |
+| Model                 | Description                                                                                                                           |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `TaskType(str, Enum)` | Task type enum: `generate`, `polish`, `translate`, `summarize`                                                                        |
+| `WritingRequest`      | Writing request body: `task_type`, `content`, `style`, `target_lang`, `attachment_text`, `model` (optional), `temperature` (optional) |
+| `WritingResponse`     | Writing response body: `task_type`, `result` (generated text), `token_count`                                                          |
+| `ExportRequest`       | Export request body: `content` (Markdown content), `title` (document title)                                                           |
+| `ExportPptxRequest`   | PPTX export request body: `content`, `title`, `template` (theme template), `with_images` (whether to include images), `unsplash_key`  |
+| `HistoryCreate`       | History creation request: `task_type`, `content`, `result`, `style`, `token_count`                                                    |
+| `HistoryOut`          | History response: includes full fields such as `id`, `created_at`, etc.                                                               |
 
 ### `models/history.py` — ORM Model
 
 SQLAlchemy ORM model `HistoryRecord`, mapped to the `history` table:
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | Integer (PK) | Auto-increment primary key |
-| `task_type` | String | Task type |
-| `content` | Text | Input content |
-| `result` | Text | Generated result |
-| `style` | String | Writing style |
-| `token_count` | Integer | Token count |
-| `created_at` | DateTime | Creation timestamp (UTC) |
+| Field         | Type         | Description                |
+| ------------- | ------------ | -------------------------- |
+| `id`          | Integer (PK) | Auto-increment primary key |
+| `task_type`   | String       | Task type                  |
+| `content`     | Text         | Input content              |
+| `result`      | Text         | Generated result           |
+| `style`       | String       | Writing style              |
+| `token_count` | Integer      | Token count                |
+| `created_at`  | DateTime     | Creation timestamp (UTC)   |
 
 ### `routers/writing.py` — Writing API Routes
 
 Provides six core endpoints, all under the prefix `/api/writing`:
 
-| Endpoint | Method | Function |
-|----------|--------|----------|
-| `/upload` | POST | Receives an uploaded file, calls `file_parser.extract_text()` to extract text, returns filename, text content, and character count |
-| `/process` | POST | Non-streaming writing processing; builds a prompt and calls `ollama_client.generate()`, returns the complete result |
-| `/stream` | POST | Streaming writing processing; returns tokens incrementally in SSE format. Poetry requests follow a special path |
-| `/export-docx` | POST | Accepts Markdown text, converts to a Word document, returns as a binary stream |
-| `/export-pdf` | POST | Accepts Markdown text, converts to a PDF document (fpdf2, Chinese support), returns as a binary stream |
-| `/export-pptx` | POST | Accepts a Markdown PPT outline, converts to a PPTX presentation (supports theme templates and Unsplash images), returns as a binary stream |
+| Endpoint       | Method | Function                                                                                                                                   |
+| -------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `/upload`      | POST   | Receives an uploaded file, calls `file_parser.extract_text()` to extract text, returns filename, text content, and character count         |
+| `/process`     | POST   | Non-streaming writing processing; builds a prompt and calls `ollama_client.generate()`, returns the complete result                        |
+| `/stream`      | POST   | Streaming writing processing; returns tokens incrementally in SSE format. Poetry requests follow a special path                            |
+| `/export-docx` | POST   | Accepts Markdown text, converts to a Word document, returns as a binary stream                                                             |
+| `/export-pdf`  | POST   | Accepts Markdown text, converts to a PDF document (fpdf2, Chinese support), returns as a binary stream                                     |
+| `/export-pptx` | POST   | Accepts a Markdown PPT outline, converts to a PPTX presentation (supports theme templates and Unsplash images), returns as a binary stream |
 
 ### `routers/history.py` — History Routes
 
 Provides four CRUD endpoints, all under the prefix `/api/history`:
 
-| Endpoint | Method | Function |
-|----------|--------|----------|
-| `/` | GET | Retrieves the history list; supports keyword search and pagination |
-| `/` | POST | Creates a new history record; returns 201 |
-| `/{id}` | DELETE | Deletes the history record with the specified ID; returns 204 |
-| `/` | DELETE | Clears all history records; returns 204 |
+| Endpoint | Method | Function                                                           |
+| -------- | ------ | ------------------------------------------------------------------ |
+| `/`      | GET    | Retrieves the history list; supports keyword search and pagination |
+| `/`      | POST   | Creates a new history record; returns 201                          |
+| `/{id}`  | DELETE | Deletes the history record with the specified ID; returns 204      |
+| `/`      | DELETE | Clears all history records; returns 204                            |
 
 ### `middleware/` — Middleware
 
-| Middleware | Description |
-|-----------|-------------|
-| `RequestLoggingMiddleware` | Logs the method, path, status code, and processing duration of each request |
-| `RateLimitMiddleware` | IP sliding-window rate limiting; AI generation endpoints (`/api/writing/process`, `/api/writing/stream`) are limited to 10 requests per IP per minute; returns 429 when exceeded |
+| Middleware                 | Description                                                                                                                                                                      |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `RequestLoggingMiddleware` | Logs the method, path, status code, and processing duration of each request                                                                                                      |
+| `RateLimitMiddleware`      | IP sliding-window rate limiting; AI generation endpoints (`/api/writing/process`, `/api/writing/stream`) are limited to 10 requests per IP per minute; returns 429 when exceeded |
 
 **Poetry Special Handling Logic** (within the `/stream` endpoint):
 
@@ -177,18 +177,18 @@ Provides four CRUD endpoints, all under the prefix `/api/history`:
 
 Contains **9 prompt templates** covering a variety of writing scenarios:
 
-| Template Constant | Applicable Scenario | Trigger Condition |
-|-------------------|---------------------|-------------------|
-| `GENERATE_PROMPT` | General article generation | `task_type=generate`, default style |
-| `POETRY_PROMPT` | Classical Chinese poetry composition | `task_type=generate`, content contains poetry keywords |
-| `POLISH_PROMPT` | Text polishing and rewriting | `task_type=polish` |
-| `TRANSLATE_PROMPT` | Multi-language translation | `task_type=translate` |
-| `SUMMARIZE_PROMPT` | Text summarization | `task_type=summarize` |
-| `XIAOHONGSHU_PROMPT` | Xiaohongshu (Little Red Book) viral copywriting | `style=xiaohongshu` |
-| `GONGZHONGHAO_PROMPT` | WeChat Official Account long-form articles | `style=gongzhonghao` |
-| `TOUTIAO_PROMPT` | Toutiao (Today's Headlines) articles | `style=toutiao` |
-| `AI_DRAMA_PROMPT` | AI short drama scripts | `style=ai_drama` |
-| `PPT_PROMPT` | Presentation outlines (with 6 layout markers) | `style=ppt` |
+| Template Constant     | Applicable Scenario                             | Trigger Condition                                      |
+| --------------------- | ----------------------------------------------- | ------------------------------------------------------ |
+| `GENERATE_PROMPT`     | General article generation                      | `task_type=generate`, default style                    |
+| `POETRY_PROMPT`       | Classical Chinese poetry composition            | `task_type=generate`, content contains poetry keywords |
+| `POLISH_PROMPT`       | Text polishing and rewriting                    | `task_type=polish`                                     |
+| `TRANSLATE_PROMPT`    | Multi-language translation                      | `task_type=translate`                                  |
+| `SUMMARIZE_PROMPT`    | Text summarization                              | `task_type=summarize`                                  |
+| `XIAOHONGSHU_PROMPT`  | Xiaohongshu (Little Red Book) viral copywriting | `style=xiaohongshu`                                    |
+| `GONGZHONGHAO_PROMPT` | WeChat Official Account long-form articles      | `style=gongzhonghao`                                   |
+| `TOUTIAO_PROMPT`      | Toutiao (Today's Headlines) articles            | `style=toutiao`                                        |
+| `AI_DRAMA_PROMPT`     | AI short drama scripts                          | `style=ai_drama`                                       |
+| `PPT_PROMPT`          | Presentation outlines (with 6 layout markers)   | `style=ppt`                                            |
 
 **Core Functions**:
 
@@ -200,21 +200,21 @@ Contains **9 prompt templates** covering a variety of writing scenarios:
 
 Communicates with the local Ollama service via httpx; default model is `qwen3.5:9b`, with support for custom model and temperature:
 
-| Function | Mode | Description |
-|----------|------|-------------|
-| `generate(prompt, model, temperature)` | Non-streaming | Sends `POST /api/generate` (`stream=False`), returns the complete text and token count |
-| `generate_stream(prompt, model, temperature)` | Streaming | Sends `POST /api/generate` (`stream=True`), returns an `AsyncGenerator` that parses JSON line by line to extract tokens |
+| Function                                      | Mode          | Description                                                                                                             |
+| --------------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `generate(prompt, model, temperature)`        | Non-streaming | Sends `POST /api/generate` (`stream=False`), returns the complete text and token count                                  |
+| `generate_stream(prompt, model, temperature)` | Streaming     | Sends `POST /api/generate` (`stream=True`), returns an `AsyncGenerator` that parses JSON line by line to extract tokens |
 
 - Uniformly sets `think=False` to disable the model's chain-of-thought output
 - Timeout: 120 seconds
 
 ### `services/file_parser.py` — File Parsing
 
-| File Type | Parsing Method | Dependency |
-|-----------|---------------|------------|
-| `.pdf` | Extracts text page by page | PyPDF2 |
-| `.docx` / `.doc` | Extracts paragraph text | python-docx |
-| Plain text | Attempts multiple encodings for decoding | Built-in |
+| File Type        | Parsing Method                           | Dependency  |
+| ---------------- | ---------------------------------------- | ----------- |
+| `.pdf`           | Extracts text page by page               | PyPDF2      |
+| `.docx` / `.doc` | Extracts paragraph text                  | python-docx |
+| Plain text       | Attempts multiple encodings for decoding | Built-in    |
 
 - Maximum file size: **10 MB**
 - Plain text encoding attempt order: `utf-8` → `gbk` → `gb2312` → `latin-1`
@@ -223,15 +223,15 @@ Communicates with the local Ollama service via httpx; default model is `qwen3.5:
 
 Converts Markdown text to a `.docx` file (generated in memory):
 
-| Markdown Element | Conversion Rule |
-|-----------------|-----------------|
-| `# / ## / ###` | Mapped to Word heading levels 1–3 |
-| `- / * / +` lists | Word unordered list |
-| `1. 2. 3.` lists | Word ordered list |
-| `>` blockquote | Left indent + italic + gray font |
-| `---` / `***` | Centered gray divider line |
-| `**bold**` | Word bold |
-| `*italic*` | Word italic |
+| Markdown Element  | Conversion Rule                   |
+| ----------------- | --------------------------------- |
+| `# / ## / ###`    | Mapped to Word heading levels 1–3 |
+| `- / * / +` lists | Word unordered list               |
+| `1. 2. 3.` lists  | Word ordered list                 |
+| `>` blockquote    | Left indent + italic + gray font  |
+| `---` / `***`     | Centered gray divider line        |
+| `**bold**`        | Word bold                         |
+| `*italic*`        | Word italic                       |
 
 ### `services/pdf_export.py` — PDF Document Export
 
@@ -280,17 +280,17 @@ Provides automatic image sourcing for PPT slides by searching relevant images vi
 
 The central hub for global state management and business logic orchestration:
 
-| State | Type | Purpose |
-|-------|------|---------|
-| `result` | `string` | Currently displayed generated result text |
-| `loading` | `boolean` | Whether streaming generation is in progress |
-| `tokenCount` | `number` | Number of tokens received |
-| `error` | `string` | Error message |
-| `online` | `boolean \| null` | Back-end service online status |
-| `history` | `HistoryItem[]` | History record list |
-| `activeId` | `string` | Currently selected history record ID |
-| `sidebarOpen` | `boolean` | Mobile sidebar expanded state |
-| `theme` | `string` | Dark mode state (system/light/dark) |
+| State         | Type            | Purpose                                     |                                |
+| ------------- | --------------- | ------------------------------------------- |                                |
+| `result`      | `string`        | Currently displayed generated result text   |                                |
+| `loading`     | `boolean`       | Whether streaming generation is in progress |                                |
+| `tokenCount`  | `number`        | Number of tokens received                   |                                |
+| `error`       | `string`        | Error message                               |                                |
+| `online`      | `boolean \      | null`                                       | Back-end service online status |
+| `history`     | `HistoryItem[]` | History record list                         |                                |
+| `activeId`    | `string`        | Currently selected history record ID        |                                |
+| `sidebarOpen` | `boolean`       | Mobile sidebar expanded state               |                                |
+| `theme`       | `string`        | Dark mode state (system/light/dark)         |                                |
 
 **Core Logic**:
 
@@ -346,14 +346,14 @@ The central hub for global state management and business logic orchestration:
 
 HTTP requests wrapped with Axios; base URL `http://localhost:8000`, timeout 120 seconds:
 
-| Function | Description |
-|----------|-------------|
-| `processWriting(req)` | Non-streaming request |
-| `streamWriting(req, onToken, onDone, onError)` | Streaming request; uses native `fetch()` + `ReadableStream` to read SSE events |
-| `healthCheck()` | Health check |
-| `uploadFile(file)` | File upload |
-| `downloadDocx(content, title)` | Export to Word; preferentially uses the File System Access API |
-| `downloadPdf(content, title)` | Export to PDF; preferentially uses the File System Access API |
+| Function                                                          | Description                                                                                                  |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `processWriting(req)`                                             | Non-streaming request                                                                                        |
+| `streamWriting(req, onToken, onDone, onError)`                    | Streaming request; uses native `fetch()` + `ReadableStream` to read SSE events                               |
+| `healthCheck()`                                                   | Health check                                                                                                 |
+| `uploadFile(file)`                                                | File upload                                                                                                  |
+| `downloadDocx(content, title)`                                    | Export to Word; preferentially uses the File System Access API                                               |
+| `downloadPdf(content, title)`                                     | Export to PDF; preferentially uses the File System Access API                                                |
 | `downloadPptx(content, title, template, withImages, unsplashKey)` | Export to PPTX; supports theme templates and Unsplash images; timeout is 300 seconds when images are enabled |
 
 > **Note**: `streamWriting` uses native `fetch()` instead of Axios because Axios does not support streaming response body reading.

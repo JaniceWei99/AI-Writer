@@ -7,16 +7,16 @@
 
 ## 1. 系统概述
 
-| 属性 | 值 |
-|------|-----|
-| 项目名称 | AI 写作助手 |
-| 架构 | 前后端分离，SSE 流式通信 |
-| 后端 | Python 3.10+, FastAPI, Pydantic v2, httpx, SQLAlchemy, aiosqlite, uvicorn |
-| 前端 | React 19, TypeScript, Vite 8, Axios, react-markdown |
-| LLM 后端 | Ollama REST API (localhost:11434) |
-| 默认模型 | qwen3.5:9b |
-| 后端端口 | 8000 |
-| 前端端口 | 5173 (dev) |
+| 属性     | 值                                                                        |
+| -------- | ------------------------------------------------------------------------- |
+| 项目名称 | AI 写作助手                                                               |
+| 架构     | 前后端分离，SSE 流式通信                                                  |
+| 后端     | Python 3.10+, FastAPI, Pydantic v2, httpx, SQLAlchemy, aiosqlite, uvicorn |
+| 前端     | React 19, TypeScript, Vite 8, Axios, react-markdown                       |
+| LLM 后端 | Ollama REST API (localhost:11434)                                         |
+| 默认模型 | qwen3.5:9b                                                                |
+| 后端端口 | 8000                                                                      |
+| 前端端口 | 5173 (dev)                                                                |
 
 ---
 
@@ -30,7 +30,7 @@ TaskType = "generate" | "polish" | "translate" | "summarize"
 
 ```
 Style = "" | "literary" | "sh_gaokao"
-      | "xiaohongshu" | "gongzhonghao" | "toutiao" | "ai_drama" | "ppt"
+| "xiaohongshu" | "gongzhonghao" | "toutiao" | "ai_drama" | "ppt" |
 ```
 
 ```

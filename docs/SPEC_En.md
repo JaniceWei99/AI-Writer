@@ -7,16 +7,16 @@
 
 ## 1. System Overview
 
-| Property | Value |
-|----------|-------|
-| Project Name | AI Writing Assistant |
-| Architecture | Frontend-backend separation, SSE streaming communication |
-| Backend | Python 3.10+, FastAPI, Pydantic v2, httpx, SQLAlchemy, aiosqlite, uvicorn |
-| Frontend | React 19, TypeScript, Vite 8, Axios, react-markdown |
-| LLM Backend | Ollama REST API (localhost:11434) |
-| Default Model | qwen3.5:9b |
-| Backend Port | 8000 |
-| Frontend Port | 5173 (dev) |
+| Property      | Value                                                                     |
+| ------------- | ------------------------------------------------------------------------- |
+| Project Name  | AI Writing Assistant                                                      |
+| Architecture  | Frontend-backend separation, SSE streaming communication                  |
+| Backend       | Python 3.10+, FastAPI, Pydantic v2, httpx, SQLAlchemy, aiosqlite, uvicorn |
+| Frontend      | React 19, TypeScript, Vite 8, Axios, react-markdown                       |
+| LLM Backend   | Ollama REST API (localhost:11434)                                         |
+| Default Model | qwen3.5:9b                                                                |
+| Backend Port  | 8000                                                                      |
+| Frontend Port | 5173 (dev)                                                                |
 
 ---
 
@@ -30,7 +30,7 @@ TaskType = "generate" | "polish" | "translate" | "summarize"
 
 ```
 Style = "" | "literary" | "sh_gaokao"
-      | "xiaohongshu" | "gongzhonghao" | "toutiao" | "ai_drama" | "ppt"
+| "xiaohongshu" | "gongzhonghao" | "toutiao" | "ai_drama" | "ppt" |
 ```
 
 ```

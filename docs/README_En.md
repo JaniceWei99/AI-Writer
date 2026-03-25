@@ -18,17 +18,17 @@
 
 ## Feature Overview
 
-| Module | Feature | Description |
-|--------|---------|-------------|
-| **Article Generation** | Multi-style writing | Literary / Shanghai Gaokao Essay / Xiaohongshu Viral / WeChat Official Account / Toutiao Headlines / AI Drama Script |
-| **PPT Generation** | Multi-layout slides | 6 auto-matched layouts: bullets, stats, comparison, timeline, quote, grid |
-| **Poetry Creation** | Classical Chinese | 5-char/7-char quatrains & regulated verse, with character count validation and auto-retry |
-| **Text Polishing** | Content refinement | Improve writing quality and readability, with original text comparison view |
-| **Multilingual Translation** | 6 languages | Chinese / English / Japanese / Korean / French / German, with comparison view |
-| **Text Summarization** | Key point extraction | Automatically generate structured summaries from long texts |
-| **File Upload** | 8 formats | PDF / Word / TXT / Markdown / CSV / JSON / XML / HTML (max 10MB) |
-| **Multi-format Export** | 5 formats | Word(.docx) / PDF(.pdf) / PPT(.pptx) / TXT(.txt) / Markdown(.md) |
-| **History** | Database persistence | SQLite storage, keyword search, survives browser changes |
+| Module                       | Feature              | Description                                                                                                          |
+| ---------------------------- | -------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| **Article Generation**       | Multi-style writing  | Literary / Shanghai Gaokao Essay / Xiaohongshu Viral / WeChat Official Account / Toutiao Headlines / AI Drama Script |
+| **PPT Generation**           | Multi-layout slides  | 6 auto-matched layouts: bullets, stats, comparison, timeline, quote, grid                                            |
+| **Poetry Creation**          | Classical Chinese    | 5-char/7-char quatrains & regulated verse, with character count validation and auto-retry                            |
+| **Text Polishing**           | Content refinement   | Improve writing quality and readability, with original text comparison view                                          |
+| **Multilingual Translation** | 6 languages          | Chinese / English / Japanese / Korean / French / German, with comparison view                                        |
+| **Text Summarization**       | Key point extraction | Automatically generate structured summaries from long texts                                                          |
+| **File Upload**              | 8 formats            | PDF / Word / TXT / Markdown / CSV / JSON / XML / HTML (max 10MB)                                                     |
+| **Multi-format Export**      | 5 formats            | Word(.docx) / PDF(.pdf) / PPT(.pptx) / TXT(.txt) / Markdown(.md)                                                     |
+| **History**                  | Database persistence | SQLite storage, keyword search, survives browser changes                                                             |
 
 ---
 
@@ -38,23 +38,23 @@ The PPT feature supports one-click generation from topic to finished presentatio
 
 ### Theme Templates
 
-| Template | Color Scheme | Use Case |
-|----------|-------------|----------|
-| Business Blue (business) | Blue tones | Business reports, work summaries |
-| Minimal Gray (minimal) | Gray-white tones | Academic presentations, tech talks |
-| Fresh Green (green) | Green tones | Environmental topics, education |
-| Warm Tones (warm) | Orange-red tones | Creative showcases, team sharing |
+| Template                 | Color Scheme     | Use Case                           |
+| ------------------------ | ---------------- | ---------------------------------- |
+| Business Blue (business) | Blue tones       | Business reports, work summaries   |
+| Minimal Gray (minimal)   | Gray-white tones | Academic presentations, tech talks |
+| Fresh Green (green)      | Green tones      | Environmental topics, education    |
+| Warm Tones (warm)        | Orange-red tones | Creative showcases, team sharing   |
 
 ### Slide Layouts
 
-| Layout | Purpose | Effect |
-|--------|---------|--------|
-| `bullets` | General content | Title + bullet point list |
-| `stats` | Data display | Large number cards side by side |
-| `comparison` | Comparative analysis | Two-column layout with divider |
-| `timeline` | Timeline | Horizontal axis with node markers |
-| `quote` | Quotations | Large quote marks + centered text |
-| `grid` | Multiple items | Adaptive 2-3 column card grid |
+| Layout       | Purpose              | Effect                            |
+| ------------ | -------------------- | --------------------------------- |
+| `bullets`    | General content      | Title + bullet point list         |
+| `stats`      | Data display         | Large number cards side by side   |
+| `comparison` | Comparative analysis | Two-column layout with divider    |
+| `timeline`   | Timeline             | Horizontal axis with node markers |
+| `quote`      | Quotations           | Large quote marks + centered text |
+| `grid`       | Multiple items       | Adaptive 2-3 column card grid     |
 
 AI automatically annotates the best layout for each slide, with optional Bing image search for auto-illustration.
 
@@ -64,36 +64,36 @@ AI automatically annotates the best layout for each slide, with optional Bing im
 
 ### Backend
 
-| Technology | Description |
-| --- | --- |
-| Python 3.10+ | Programming language |
-| FastAPI | Web framework |
-| Pydantic | Data validation and serialization |
-| Uvicorn | ASGI server |
-| httpx | Async HTTP client (Ollama API calls) |
-| SQLAlchemy + aiosqlite | Async ORM with SQLite database |
-| python-docx | Word document generation and export |
-| fpdf2 | PDF document generation and export |
-| python-pptx | PowerPoint presentation generation and export |
-| PyPDF2 | PDF file parsing |
-| python-multipart | File upload support |
-| uv | Dependency management tool |
+| Technology             | Description                                   |
+| ---------------------- | --------------------------------------------- |
+| Python 3.10+           | Programming language                          |
+| FastAPI                | Web framework                                 |
+| Pydantic               | Data validation and serialization             |
+| Uvicorn                | ASGI server                                   |
+| httpx                  | Async HTTP client (Ollama API calls)          |
+| SQLAlchemy + aiosqlite | Async ORM with SQLite database                |
+| python-docx            | Word document generation and export           |
+| fpdf2                  | PDF document generation and export            |
+| python-pptx            | PowerPoint presentation generation and export |
+| PyPDF2                 | PDF file parsing                              |
+| python-multipart       | File upload support                           |
+| uv                     | Dependency management tool                    |
 
 ### Frontend
 
-| Technology | Description |
-| --- | --- |
-| React 19 | UI framework |
-| TypeScript | Type-safe JavaScript |
-| Vite 8 | Build tool and dev server |
-| Axios | HTTP request library |
+| Technology     | Description                  |
+| -------------- | ---------------------------- |
+| React 19       | UI framework                 |
+| TypeScript     | Type-safe JavaScript         |
+| Vite 8         | Build tool and dev server    |
+| Axios          | HTTP request library         |
 | react-markdown | Markdown rendering component |
 
 ### LLM
 
-| Technology | Description |
-| --- | --- |
-| Ollama | Local LLM runtime |
+| Technology | Description                            |
+| ---------- | -------------------------------------- |
+| Ollama     | Local LLM runtime                      |
 | qwen3.5:9b | Default model (switchable in settings) |
 
 ---
@@ -118,11 +118,11 @@ AI automatically annotates the best layout for each slide, with optional Bing im
 
 ### Keyboard Shortcuts
 
-| Shortcut | Function |
-|----------|----------|
-| `Ctrl+Enter` | Submit request |
-| `Esc` | Stop generation |
-| `Ctrl+S` | Intercept browser save |
+| Shortcut     | Function               |
+| ------------ | ---------------------- |
+| `Ctrl+Enter` | Submit request         |
+| `Esc`        | Stop generation        |
+| `Ctrl+S`     | Intercept browser save |
 
 ### Mobile Responsive
 
@@ -238,13 +238,13 @@ my_first/
 
 ## Version History
 
-| Version | Date | Major Changes |
-|---------|------|---------------|
-| v1.3.1 | 2026-03-23 | Unified version numbering, PPT generation stable release |
-| v1.3.0 | 2026-03-23 | PPT multi-layout system: 6 slide layout types + AI auto-layout annotation |
-| v1.2.0 | 2026-03-22 | PPT export: 4 theme templates + Unsplash/Bing image integration |
-| v1.1.0 | 2026-03-22 | Result editing, dark mode, database persistence, rate limiting, settings panel |
-| v1.0.0 | 2026-03-21 | Core writing features, streaming output, file upload, Word export |
+| Version | Date       | Major Changes                                                                  |
+| ------- | ---------- | ------------------------------------------------------------------------------ |
+| v1.3.1  | 2026-03-23 | Unified version numbering, PPT generation stable release                       |
+| v1.3.0  | 2026-03-23 | PPT multi-layout system: 6 slide layout types + AI auto-layout annotation      |
+| v1.2.0  | 2026-03-22 | PPT export: 4 theme templates + Unsplash/Bing image integration                |
+| v1.1.0  | 2026-03-22 | Result editing, dark mode, database persistence, rate limiting, settings panel |
+| v1.0.0  | 2026-03-21 | Core writing features, streaming output, file upload, Word export              |
 
 See [CHANGELOG_En.md](./CHANGELOG_En.md) for detailed release notes.
 

@@ -1,8 +1,19 @@
+import os
+
 import httpx
 from typing import AsyncGenerator, Optional
 
-OLLAMA_BASE_URL = "http://localhost:11434"
-DEFAULT_MODEL = "qwen3.5:9b"
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+DEFAULT_MODEL = os.getenv("OLLAMA_MODEL", "qwen3.5:9b")
+
+
+async def list_models() -> list[dict]:
+    """查询 Ollama 已安装的模型列表。"""
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        resp = await client.get(f"{OLLAMA_BASE_URL}/api/tags")
+        resp.raise_for_status()
+        data = resp.json()
+        return data.get("models", [])
 
 
 async def generate(prompt: str, model: str = DEFAULT_MODEL, temperature: Optional[float] = None) -> dict:
