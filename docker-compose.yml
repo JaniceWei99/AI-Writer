@@ -1,0 +1,50 @@
+# =============================================================
+#  AI Writing Assistant — Docker Compose (Shared Deployment)
+#
+#  Usage:
+#    docker compose up -d            # start all services
+#    docker compose logs -f app      # follow app logs
+#    docker compose down             # stop all services
+#
+#  For GPU support (NVIDIA), uncomment the `deploy` section
+#  in the ollama service below.
+# =============================================================
+
+services:
+  # ---- Web Application (FastAPI + React) ----
+  app:
+    build: .
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen3.5:9b}
+      - CORS_ORIGINS=${CORS_ORIGINS:-*}
+      - DATABASE_URL=${DATABASE_URL:-}
+    volumes:
+      - app-data:/app/data    # persist SQLite database
+    depends_on:
+      - ollama
+    restart: unless-stopped
+
+  # ---- Ollama (LLM inference engine) ----
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    restart: unless-stopped
+    # ---- GPU support (NVIDIA) ----
+    # Uncomment the following section to enable GPU acceleration:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+volumes:
+  app-data:
+  ollama-data:
