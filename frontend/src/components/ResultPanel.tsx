@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react'
-import { Copy, Edit3, Save, XCircle, RefreshCw, ChevronDown, GitCompare, Sparkles } from 'lucide-react'
+import { Copy, Edit3, Save, XCircle, RefreshCw, GitCompare, Sparkles, PenLine, Languages, MoreHorizontal } from 'lucide-react'
 import Markdown from 'react-markdown'
 import { downloadDocx, downloadTxt, downloadMd, downloadPdf, downloadPptx } from '../services/api'
 import { TaskType, PPT_TEMPLATE_OPTIONS } from '../types'
 import './ResultPanel.css'
 import QualityPanel from './QualityPanel'
+
+function countChars(text: string): number {
+  return text.replace(/[#*_`~\[\]()>|{}\-\n\r\s]/g, '').length
+}
 
 interface Props {
   result: string
@@ -21,6 +25,8 @@ interface Props {
   unsplashKey?: string
   pptTemplate?: string
   pptWithImages?: boolean
+  onQuickStart?: (taskType: string) => void
+  wordCountTarget?: number
 }
 
 export default function ResultPanel({
@@ -28,12 +34,13 @@ export default function ResultPanel({
   onRegenerate, onRetry, onResultChange, onRefine,
   originalContent, taskType, style, unsplashKey,
   pptTemplate: pptTemplateProp, pptWithImages: pptWithImagesProp,
+  onQuickStart, wordCountTarget,
 }: Props) {
   const [exporting, setExporting] = useState(false)
   const [exportMsg, setExportMsg] = useState('')
   const [editing, setEditing] = useState(false)
   const [editText, setEditText] = useState('')
-  const [showExportMenu, setShowExportMenu] = useState(false)
+  const [showOverflow, setShowOverflow] = useState(false)
   const [copyMsg, setCopyMsg] = useState('')
   const [showCompare, setShowCompare] = useState(false)
   const [pptTemplate, setPptTemplate] = useState(pptTemplateProp || 'business')
@@ -58,11 +65,11 @@ export default function ResultPanel({
   }, [result, editing])
 
   useEffect(() => {
-    if (!showExportMenu) return
-    const handler = () => setShowExportMenu(false)
+    if (!showOverflow) return
+    const handler = () => setShowOverflow(false)
     document.addEventListener('click', handler)
     return () => document.removeEventListener('click', handler)
-  }, [showExportMenu])
+  }, [showOverflow])
 
   const handleToggleEdit = () => {
     if (editing) {
@@ -72,6 +79,7 @@ export default function ResultPanel({
       setEditText(result)
       setEditing(true)
     }
+    setShowOverflow(false)
   }
 
   const handleCancelEdit = () => {
@@ -109,7 +117,7 @@ export default function ResultPanel({
   const handleExport = async (format: 'docx' | 'txt' | 'md' | 'pdf' | 'pptx') => {
     setExporting(true)
     setExportMsg('')
-    setShowExportMenu(false)
+    setShowOverflow(false)
     try {
       switch (format) {
         case 'docx': await downloadDocx(currentContent); break
@@ -155,11 +163,41 @@ export default function ResultPanel({
             </svg>
           </div>
           <p className="empty-title">开始创作</p>
-          <p className="empty-subtitle">选择任务类型，输入内容，点击「开始处理」</p>
+          <p className="empty-subtitle">选择一个方式快速开始</p>
+          {onQuickStart && (
+            <div className="empty-quick-cards">
+              <button className="empty-quick-card" onClick={() => onQuickStart('generate')}>
+                <PenLine size={18} />
+                <div className="quick-card-text">
+                  <span className="quick-card-title">写一篇文章</span>
+                  <span className="quick-card-desc">输入主题，AI 帮你生成</span>
+                </div>
+              </button>
+              <button className="empty-quick-card" onClick={() => onQuickStart('polish')}>
+                <Sparkles size={18} />
+                <div className="quick-card-text">
+                  <span className="quick-card-title">润色文本</span>
+                  <span className="quick-card-desc">优化措辞，提升质量</span>
+                </div>
+              </button>
+              <button className="empty-quick-card" onClick={() => onQuickStart('translate')}>
+                <Languages size={18} />
+                <div className="quick-card-text">
+                  <span className="quick-card-title">翻译内容</span>
+                  <span className="quick-card-desc">多语言互译</span>
+                </div>
+              </button>
+            </div>
+          )}
         </div>
       </div>
     )
   }
+
+  const charCount = countChars(result)
+  const wordCountProgress = wordCountTarget && wordCountTarget > 0
+    ? Math.min(100, (charCount / wordCountTarget) * 100)
+    : 0
 
   return (
     <div className={`result-panel ${isPpt ? 'result-panel-ppt' : ''}`}>
@@ -172,18 +210,31 @@ export default function ResultPanel({
           <span className="result-mode-badge text-badge">文案</span>
         ) : null}
         {tokenCount > 0 && (
-          <span className="token-count">{tokenCount} tokens</span>
+          <span className="token-count token-count-anim">{tokenCount} tokens</span>
         )}
         {loading && <span className="generating">生成中...</span>}
-        {canCompare && (
-          <button
-            className={`btn-compare ${showCompare ? 'active' : ''}`}
-            onClick={() => setShowCompare(!showCompare)}
-          >
-            <GitCompare size={14} />
-            {showCompare ? '关闭对比' : '对比原文'}
-          </button>
-        )}
+        <div className="result-header-end">
+          {wordCountTarget && wordCountTarget > 0 ? (
+            <div className="word-count-progress">
+              <span className="word-count-text">{charCount} / {wordCountTarget} 字</span>
+              <div className="word-count-bar">
+                <div
+                  className={`word-count-fill ${charCount >= wordCountTarget ? 'complete' : ''}`}
+                  style={{ width: `${wordCountProgress}%` }}
+                />
+              </div>
+            </div>
+          ) : null}
+          {canCompare && (
+            <button
+              className={`btn-compare ${showCompare ? 'active' : ''}`}
+              onClick={() => setShowCompare(!showCompare)}
+            >
+              <GitCompare size={14} />
+              {showCompare ? '关闭对比' : '对比原文'}
+            </button>
+          )}
+        </div>
       </div>
 
       {showCompare && canCompare ? (
@@ -224,13 +275,8 @@ export default function ResultPanel({
             {copyMsg || '复制'}
           </button>
 
-          {editing ? (
-            <>
-              <button className="btn btn-edit-save" onClick={handleToggleEdit}><Save size={14} /> 保存</button>
-              <button className="btn btn-edit-cancel" onClick={handleCancelEdit}><XCircle size={14} /> 取消</button>
-            </>
-          ) : (
-            <button className="btn btn-edit" onClick={handleToggleEdit}><Edit3 size={14} /> 编辑</button>
+          {onRegenerate && (
+            <button className="btn btn-regenerate" onClick={onRegenerate}><RefreshCw size={14} /> 换一个</button>
           )}
 
           {/* PPT mode: prominent PPTX export + template inline */}
@@ -265,30 +311,34 @@ export default function ResultPanel({
             </>
           )}
 
-          {/* Standard export dropdown */}
-          <div className="export-dropdown">
-            <button
-              className="btn btn-download"
-              onClick={(e) => { e.stopPropagation(); setShowExportMenu(!showExportMenu) }}
-              disabled={exporting}
-            >
-              {exporting ? '导出中...' : (isPpt ? '其他格式' : '导出')} <ChevronDown size={12} />
-            </button>
-            {showExportMenu && (
-              <div className="export-menu">
-                <button onClick={() => handleExport('docx')}>Word (.docx)</button>
-                <button onClick={() => handleExport('txt')}>纯文本 (.txt)</button>
-                <button onClick={() => handleExport('md')}>Markdown (.md)</button>
-                <button onClick={() => handleExport('pdf')}>PDF (.pdf)</button>
-                {!isPpt && (
-                  <button onClick={() => handleExport('pptx')}>PPT (.pptx)</button>
-                )}
-              </div>
-            )}
-          </div>
-
-          {onRegenerate && (
-            <button className="btn btn-regenerate" onClick={onRegenerate}><RefreshCw size={14} /> 换一个</button>
+          {editing ? (
+            <>
+              <button className="btn btn-edit-save" onClick={handleToggleEdit}><Save size={14} /> 保存</button>
+              <button className="btn btn-edit-cancel" onClick={handleCancelEdit}><XCircle size={14} /> 取消</button>
+            </>
+          ) : (
+            <div className="overflow-dropdown">
+              <button
+                className="btn btn-overflow"
+                onClick={(e) => { e.stopPropagation(); setShowOverflow(!showOverflow) }}
+                title="更多操作"
+              >
+                <MoreHorizontal size={16} />
+              </button>
+              {showOverflow && (
+                <div className="overflow-menu">
+                  <button onClick={handleToggleEdit}><Edit3 size={14} /> 编辑结果</button>
+                  <div className="overflow-divider" />
+                  <button onClick={() => handleExport('docx')} disabled={exporting}>Word (.docx)</button>
+                  <button onClick={() => handleExport('txt')} disabled={exporting}>纯文本 (.txt)</button>
+                  <button onClick={() => handleExport('md')} disabled={exporting}>Markdown (.md)</button>
+                  <button onClick={() => handleExport('pdf')} disabled={exporting}>PDF (.pdf)</button>
+                  {!isPpt && (
+                    <button onClick={() => handleExport('pptx')} disabled={exporting}>PPT (.pptx)</button>
+                  )}
+                </div>
+              )}
+            </div>
           )}
 
           {exportMsg && (

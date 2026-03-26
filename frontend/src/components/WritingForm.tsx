@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { PenLine, Presentation, ChevronDown, ChevronRight, X, Plus, Paperclip, Send, Square } from 'lucide-react'
 import {
   TaskType,
@@ -15,6 +15,9 @@ import { getTemplates, addTemplate, removeTemplate } from '../services/templates
 import type { PromptTemplate } from '../services/templates'
 import './WritingForm.css'
 
+type Tone = 'casual' | 'standard' | 'formal'
+const TONE_LABELS: Record<Tone, string> = { casual: '随意', standard: '标准', formal: '正式' }
+
 interface Props {
   onSubmit: (req: WritingRequest) => void
   loading: boolean
@@ -23,11 +26,15 @@ interface Props {
   unsplashKey?: string
   customStyles?: CustomStyleItem[]
   onOpenStyleEditor?: () => void
+  quickStart?: { taskType: string } | null
+  onQuickStartConsumed?: () => void
+  wordCountTarget?: number
+  onWordCountTargetChange?: (target: number) => void
 }
 
 const ACCEPT_TYPES = '.pdf,.docx,.doc,.pptx,.ppt,.txt,.md,.csv,.json,.xml,.html,.htm'
 
-export default function WritingForm({ onSubmit, loading, onStop, online, unsplashKey: _unsplashKey, customStyles = [], onOpenStyleEditor }: Props) {
+export default function WritingForm({ onSubmit, loading, onStop, online, unsplashKey: _unsplashKey, customStyles = [], onOpenStyleEditor, quickStart, onQuickStartConsumed, wordCountTarget, onWordCountTargetChange }: Props) {
   const [mode, setMode] = useState<ContentMode>('text')
   const [taskType, setTaskType] = useState<TaskType>(TaskType.GENERATE)
   const [content, setContent] = useState('')
@@ -38,6 +45,7 @@ export default function WritingForm({ onSubmit, loading, onStop, online, unsplas
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [pptTemplate, setPptTemplate] = useState('business')
   const [pptWithImages, setPptWithImages] = useState(true)
 
@@ -49,6 +57,19 @@ export default function WritingForm({ onSubmit, loading, onStop, online, unsplas
 
   // Advanced options toggle
   const [showAdvanced, setShowAdvanced] = useState(false)
+
+  // Tone control
+  const [tone, setTone] = useState<Tone>('standard')
+
+  // Quick start: switch task type and focus textarea
+  useEffect(() => {
+    if (quickStart) {
+      setTaskType(quickStart.taskType as TaskType)
+      setMode('text')
+      onQuickStartConsumed?.()
+      setTimeout(() => textareaRef.current?.focus(), 50)
+    }
+  }, [quickStart, onQuickStartConsumed])
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -78,9 +99,14 @@ export default function WritingForm({ onSubmit, loading, onStop, online, unsplas
 
   const handleSubmit = () => {
     if (!content.trim()) return
+    let finalContent = content.trim()
+    if (tone !== 'standard' && mode === 'text') {
+      const toneInstr = tone === 'casual' ? '轻松随意' : '正式严谨'
+      finalContent = `${finalContent}\n\n[写作语气要求：${toneInstr}]`
+    }
     onSubmit({
       task_type: mode === 'ppt' ? TaskType.GENERATE : taskType,
-      content: content.trim(),
+      content: finalContent,
       style: mode === 'ppt' ? 'ppt' : style,
       target_lang: targetLang,
       attachment_text: attachmentText,
@@ -168,6 +194,7 @@ export default function WritingForm({ onSubmit, loading, onStop, online, unsplas
       )}
 
       <textarea
+        ref={textareaRef}
         className="content-input"
         value={content}
         onChange={(e) => setContent(e.target.value)}
@@ -179,6 +206,19 @@ export default function WritingForm({ onSubmit, loading, onStop, online, unsplas
       />
       <div className="content-counter">
         <span>{content.length} 字符</span>
+        <span className="word-target-group">
+          目标
+          <input
+            type="number"
+            className="word-target-input"
+            value={wordCountTarget || ''}
+            onChange={(e) => onWordCountTargetChange?.(parseInt(e.target.value) || 0)}
+            placeholder="—"
+            min={0}
+            step={100}
+          />
+          字
+        </span>
         <span className="shortcut-hint">Ctrl+Enter 提交</span>
       </div>
 
@@ -228,6 +268,22 @@ export default function WritingForm({ onSubmit, loading, onStop, online, unsplas
             <span className="advanced-indicator" />
           )}
         </button>
+
+        {mode === 'text' && (
+          <div className="tone-control">
+            {(['casual', 'standard', 'formal'] as const).map((t) => (
+              <button
+                key={t}
+                className={`tone-btn ${tone === t ? 'active' : ''}`}
+                onClick={() => setTone(t)}
+                disabled={loading}
+                type="button"
+              >
+                {TONE_LABELS[t]}
+              </button>
+            ))}
+          </div>
+        )}
 
         <div className="submit-row-spacer" />
 

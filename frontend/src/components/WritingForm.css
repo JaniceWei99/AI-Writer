@@ -703,3 +703,84 @@
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+/* === Tone control (segmented) === */
+
+.tone-control {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.tone-btn {
+  padding: 5px 14px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  border-right: 1px solid var(--border);
+}
+
+.tone-btn:last-child {
+  border-right: none;
+}
+
+.tone-btn:hover:not(:disabled) {
+  color: var(--text-h);
+  background: var(--code-bg);
+}
+
+.tone-btn.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.tone-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* === Word count target === */
+
+.word-target-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text);
+  opacity: 0.5;
+}
+
+.word-target-input {
+  width: 52px;
+  padding: 2px 4px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-h);
+  font-size: 12px;
+  text-align: center;
+  outline: none;
+  transition: all 0.2s;
+  -moz-appearance: textfield;
+}
+
+.word-target-input::-webkit-outer-spin-button,
+.word-target-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.word-target-input:hover,
+.word-target-input:focus {
+  border-color: var(--border);
+  background: var(--bg);
+}
+
+.word-target-input::placeholder {
+  color: var(--text);
+  opacity: 0.4;
+}
