@@ -266,26 +266,18 @@
   font-size: 11px;
 }
 
-/* === Submit row (always visible) === */
+/* === Action bar (style + upload + submit in one row) === */
 
-.submit-row {
+.action-bar {
   display: flex;
   align-items: center;
-  gap: 12px;
-}
-
-.submit-row-spacer {
-  flex: 1;
-}
-
-/* === Options row (style, language, templates) === */
-
-.options-row {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+  gap: 10px;
   flex-wrap: wrap;
-  padding: 10px 0;
+  padding: 8px 0 0;
+}
+
+.action-bar-spacer {
+  flex: 1;
 }
 
 .btn-submit,

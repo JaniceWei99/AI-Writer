@@ -228,45 +228,70 @@ export default function WritingForm({ onSubmit, loading, onStop, online, unsplas
         </div>
       )}
 
-      {/* Style & attachment options */}
-      {mode === 'text' && (
-        <div className="options-row">
-          <label className="option">
-            <span>风格</span>
-            <select value={style} onChange={(e) => setStyle(e.target.value)} disabled={loading}>
-              {TEXT_STYLE_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-              {customStyles.length > 0 && (
-                <optgroup label="自定义风格">
-                  {customStyles.map((s) => (
-                    <option key={s.slug} value={s.slug}>{s.name}</option>
-                  ))}
-                </optgroup>
-              )}
-            </select>
-            {onOpenStyleEditor && (
-              <button
-                className="btn-style-manage"
-                onClick={onOpenStyleEditor}
-                disabled={loading}
-                title="管理自定义风格"
-              ><Plus size={14} /></button>
-            )}
-          </label>
-
-          {taskType === TaskType.TRANSLATE && (
+      {/* Action bar: style, upload, submit */}
+      <div className="action-bar">
+        {mode === 'text' && (
+          <>
             <label className="option">
-              <span>目标语言</span>
-              <select value={targetLang} onChange={(e) => setTargetLang(e.target.value)} disabled={loading}>
-                {LANG_OPTIONS.map((o) => (
+              <span>风格</span>
+              <select value={style} onChange={(e) => setStyle(e.target.value)} disabled={loading}>
+                {TEXT_STYLE_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>{o.label}</option>
                 ))}
+                {customStyles.length > 0 && (
+                  <optgroup label="自定义风格">
+                    {customStyles.map((s) => (
+                      <option key={s.slug} value={s.slug}>{s.name}</option>
+                    ))}
+                  </optgroup>
+                )}
               </select>
+              {onOpenStyleEditor && (
+                <button
+                  className="btn-style-manage"
+                  onClick={onOpenStyleEditor}
+                  disabled={loading}
+                  title="管理自定义风格"
+                ><Plus size={14} /></button>
+              )}
             </label>
-          )}
 
-          {/* Template buttons */}
+            {taskType === TaskType.TRANSLATE && (
+              <label className="option">
+                <span>目标语言</span>
+                <select value={targetLang} onChange={(e) => setTargetLang(e.target.value)} disabled={loading}>
+                  {LANG_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              </label>
+            )}
+          </>
+        )}
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept={ACCEPT_TYPES}
+          onChange={handleFileChange}
+          disabled={loading || uploading}
+          className="file-input-hidden"
+          id="file-upload"
+        />
+        <label htmlFor="file-upload" className={`btn btn-upload ${loading || uploading ? 'disabled' : ''}`}>
+          <Paperclip size={14} />
+          {uploading ? '解析中...' : '附件'}
+        </label>
+
+        {attachmentName && (
+          <span className="attachment-tag">
+            <span className="attachment-name">{attachmentName}</span>
+            <button className="attachment-remove" onClick={handleRemoveFile} disabled={loading} title="移除附件"><X size={14} /></button>
+          </span>
+        )}
+
+        {/* Template buttons */}
+        {mode === 'text' && (
           <div className="template-group">
             <div className="template-dropdown-wrap">
               <button
@@ -319,37 +344,10 @@ export default function WritingForm({ onSubmit, loading, onStop, online, unsplas
               </div>
             )}
           </div>
-        </div>
-      )}
-
-      <div className="attachment-row">
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept={ACCEPT_TYPES}
-          onChange={handleFileChange}
-          disabled={loading || uploading}
-          className="file-input-hidden"
-          id="file-upload"
-        />
-        <label htmlFor="file-upload" className={`btn btn-upload ${loading || uploading ? 'disabled' : ''}`}>
-          <Paperclip size={14} />
-          {uploading ? '解析中...' : '上传附件'}
-        </label>
-        <span className="attachment-hint">支持 PDF、Word、PPT、TXT 等文件作为参考资料</span>
-
-        {attachmentName && (
-          <span className="attachment-tag">
-            <span className="attachment-name">{attachmentName}</span>
-            <button className="attachment-remove" onClick={handleRemoveFile} disabled={loading} title="移除附件"><X size={14} /></button>
-          </span>
         )}
 
-        {uploadError && <span className="attachment-error" role="alert">{uploadError}</span>}
-      </div>
+        <div className="action-bar-spacer" />
 
-      {/* Submit row */}
-      <div className="submit-row">
         {loading ? (
           <button className="btn btn-stop" onClick={onStop}>
             <Square size={14} />
@@ -367,6 +365,8 @@ export default function WritingForm({ onSubmit, loading, onStop, online, unsplas
           </button>
         )}
       </div>
+
+      {uploadError && <span className="attachment-error" role="alert">{uploadError}</span>}
 
       {online === false && (
         <div className="offline-banner" role="alert">

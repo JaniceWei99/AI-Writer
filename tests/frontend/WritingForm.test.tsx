@@ -72,7 +72,7 @@ describe('WritingForm', () => {
 
   it('shows upload button directly', () => {
     render(<WritingForm {...defaultProps} />)
-    expect(screen.getByText('上传附件')).toBeInTheDocument()
+    expect(screen.getByText('附件')).toBeInTheDocument()
   })
 
   it('switches placeholder when task changes', () => {
