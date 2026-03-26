@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { X, LogIn, LogOut } from 'lucide-react'
 import { register, login, clearAuth } from '../services/auth'
 import type { AuthUser } from '../services/auth'
 import './AuthPanel.css'
@@ -54,7 +55,7 @@ export default function AuthPanel({ user, onAuthChange }: Props) {
     return (
       <div className="auth-inline">
         <span className="auth-username" title={user.username}>{user.username}</span>
-        <button className="btn-logout" onClick={handleLogout}>退出</button>
+        <button className="btn-logout" onClick={handleLogout}><LogOut size={14} /> 退出</button>
       </div>
     )
   }
@@ -62,14 +63,14 @@ export default function AuthPanel({ user, onAuthChange }: Props) {
   // Logged-out view: login button
   return (
     <>
-      <button className="btn-login" onClick={() => setShowModal(true)}>登录</button>
+      <button className="btn-login" onClick={() => setShowModal(true)}><LogIn size={14} /> 登录</button>
 
       {showModal && (
-        <div className="auth-overlay" onClick={() => setShowModal(false)}>
-          <div className="auth-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="auth-overlay" onClick={() => setShowModal(false)} role="presentation">
+          <div className="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-title" onClick={(e) => e.stopPropagation()}>
             <div className="auth-modal-header">
-              <h2>{mode === 'login' ? '用户登录' : '注册账号'}</h2>
-              <button className="auth-close" onClick={() => setShowModal(false)}>&times;</button>
+              <h2 id="auth-title">{mode === 'login' ? '用户登录' : '注册账号'}</h2>
+              <button className="auth-close" onClick={() => setShowModal(false)} aria-label="关闭"><X size={18} /></button>
             </div>
 
             <div className="auth-tabs">
@@ -110,7 +111,7 @@ export default function AuthPanel({ user, onAuthChange }: Props) {
                 />
               </label>
 
-              {error && <div className="auth-error">{error}</div>}
+              {error && <div className="auth-error" role="alert">{error}</div>}
 
               <button
                 className="btn-auth-submit"

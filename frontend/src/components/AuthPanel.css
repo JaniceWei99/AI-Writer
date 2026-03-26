@@ -23,11 +23,14 @@
   font-size: 12px;
   cursor: pointer;
   transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .btn-logout:hover {
-  border-color: #ef4444;
-  color: #ef4444;
+  border-color: var(--color-error);
+  color: var(--color-error);
 }
 
 .btn-login {
@@ -39,6 +42,9 @@
   font-size: 13px;
   cursor: pointer;
   transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .btn-login:hover {
@@ -59,11 +65,6 @@
   animation: fadeIn 0.15s ease-out;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
 .auth-modal {
   background: var(--bg);
   border: 1px solid var(--border);
@@ -72,11 +73,6 @@
   max-width: 90vw;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
   animation: slideUp 0.2s ease-out;
-}
-
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
 }
 
 .auth-modal-header {
@@ -179,10 +175,10 @@
 
 .auth-error {
   padding: 8px 12px;
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: var(--color-error-bg);
+  border: 1px solid var(--color-error-border);
   border-radius: 6px;
-  color: #ef4444;
+  color: var(--color-error);
   font-size: 13px;
 }
 

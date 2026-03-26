@@ -1,9 +1,12 @@
 import { useState, useMemo } from 'react'
+import { X, Trash2 } from 'lucide-react'
 import { TASK_LABELS, STYLE_LABELS } from '../types'
 import type { HistoryItem } from '../types'
 import type { CustomStyleItem } from '../services/api'
 import ConfirmDialog from './ConfirmDialog'
 import './HistoryPanel.css'
+
+const PAGE_SIZE = 8
 
 interface Props {
   items: HistoryItem[]
@@ -28,6 +31,7 @@ function preview(text: string, max = 30): string {
 export default function HistoryPanel({ items, activeId, onSelect, onDelete, onClear, customStyles = [] }: Props) {
   const [keyword, setKeyword] = useState('')
   const [showConfirm, setShowConfirm] = useState(false)
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
 
   const filtered = useMemo(() => {
     const kw = keyword.trim().toLowerCase()
@@ -40,12 +44,15 @@ export default function HistoryPanel({ items, activeId, onSelect, onDelete, onCl
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
   }, [items, keyword])
 
+  const visible = filtered.slice(0, visibleCount)
+  const hasMore = filtered.length > visibleCount
+
   return (
-    <div className="history-panel">
+    <div className="history-panel" role="complementary" aria-label="历史记录">
       <div className="history-header">
         <span>历史记录 ({items.length})</span>
         {items.length > 0 && (
-          <button className="history-clear" onClick={() => setShowConfirm(true)}>清空</button>
+          <button className="history-clear" onClick={() => setShowConfirm(true)} aria-label="清空所有历史记录">清空</button>
         )}
       </div>
       {items.length > 0 && (
@@ -55,10 +62,10 @@ export default function HistoryPanel({ items, activeId, onSelect, onDelete, onCl
             className="history-search-input"
             placeholder="搜索关键词..."
             value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
+            onChange={(e) => { setKeyword(e.target.value); setVisibleCount(PAGE_SIZE) }}
           />
           {keyword && (
-            <button className="history-search-clear" onClick={() => setKeyword('')}>&times;</button>
+            <button className="history-search-clear" onClick={() => setKeyword('')} aria-label="清除搜索"><X size={14} /></button>
           )}
         </div>
       )}
@@ -66,7 +73,7 @@ export default function HistoryPanel({ items, activeId, onSelect, onDelete, onCl
         <div className="history-empty">{keyword ? '没有匹配的记录' : '暂无记录'}</div>
       ) : (
         <ul className="history-list">
-          {filtered.map((item) => {
+          {visible.map((item) => {
             const isPpt = item.style === 'ppt'
             const styleLabel = STYLE_LABELS[item.style]
               || customStyles.find((s) => s.slug === item.style)?.name
@@ -93,13 +100,22 @@ export default function HistoryPanel({ items, activeId, onSelect, onDelete, onCl
                 className="history-delete"
                 onClick={(e) => { e.stopPropagation(); onDelete(item.id) }}
                 title="删除"
+                aria-label="删除此记录"
               >
-                &times;
+                <Trash2 size={14} />
               </button>
             </li>
             )
           })}
         </ul>
+      )}
+      {hasMore && (
+        <button
+          className="history-more"
+          onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+        >
+          查看更多（还有 {filtered.length - visibleCount} 条）
+        </button>
       )}
       {showConfirm && (
         <ConfirmDialog

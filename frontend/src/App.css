@@ -85,13 +85,13 @@
 }
 
 .status.online {
-  background: rgba(34, 197, 94, 0.15);
-  color: #22c55e;
+  background: var(--color-success-bg-subtle);
+  color: var(--color-success);
 }
 
 .status.offline {
-  background: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
+  background: var(--color-error-bg-subtle);
+  color: var(--color-error);
 }
 
 .app-body {

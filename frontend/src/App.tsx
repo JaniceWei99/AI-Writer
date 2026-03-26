@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { Menu, Settings, Sun, Moon, Monitor } from 'lucide-react'
 import WritingForm from './components/WritingForm'
 import ResultPanel from './components/ResultPanel'
 import HistoryPanel from './components/HistoryPanel'
@@ -17,7 +18,6 @@ import './App.css'
 
 type Theme = 'auto' | 'light' | 'dark'
 const THEME_KEY = 'writing_theme'
-const THEME_ICONS: Record<Theme, string> = { auto: 'A', light: '\u2600', dark: '\u263E' }
 const THEME_LABELS: Record<Theme, string> = { auto: '\u8DDF\u968F\u7CFB\u7EDF', light: '\u4EAE\u8272', dark: '\u6697\u8272' }
 
 function applyTheme(t: Theme) {
@@ -279,20 +279,22 @@ function App() {
             className="sidebar-toggle"
             onClick={() => setSidebarOpen((v) => !v)}
             title={sidebarOpen ? '收起侧边栏' : '展开侧边栏'}
+            aria-expanded={sidebarOpen}
+            aria-label={sidebarOpen ? '收起侧边栏' : '展开侧边栏'}
           >
-            &#9776;
+            <Menu size={18} />
           </button>
           <h1>AI 写作助手</h1>
         </div>
         <div className="header-actions">
           <AuthPanel user={authUser} onAuthChange={handleAuthChange} />
-          <button className="theme-toggle" onClick={cycleTheme} title={THEME_LABELS[theme]}>
-            {THEME_ICONS[theme]}
+          <button className="theme-toggle" onClick={cycleTheme} title={THEME_LABELS[theme]} aria-label={`切换主题: ${THEME_LABELS[theme]}`}>
+            {theme === 'auto' ? <Monitor size={16} /> : theme === 'light' ? <Sun size={16} /> : <Moon size={16} />}
           </button>
-          <button className="settings-toggle" onClick={() => setShowSettings(true)} title="Settings">
-            &#9881;
+          <button className="settings-toggle" onClick={() => setShowSettings(true)} title="Settings" aria-label="打开设置">
+            <Settings size={16} />
           </button>
-          <span className={`status ${online === true ? 'online' : online === false ? 'offline' : ''}`}>
+          <span className={`status ${online === true ? 'online' : online === false ? 'offline' : ''}`} role="status" aria-live="polite">
             {online === null ? '\u68C0\u6D4B\u4E2D...' : online ? '\u670D\u52A1\u5728\u7EBF' : '\u670D\u52A1\u79BB\u7EBF'}
           </span>
         </div>
@@ -311,16 +313,20 @@ function App() {
         </aside>
 
         <main className="app-main">
-          <div className="mode-tabs">
+          <div className="mode-tabs" role="tablist" aria-label="写作模式">
             <button
               className={`mode-tab ${writingMode === 'standard' ? 'active' : ''}`}
               onClick={() => setWritingMode('standard')}
+              role="tab"
+              aria-selected={writingMode === 'standard'}
             >
               标准写作
             </button>
             <button
               className={`mode-tab ${writingMode === 'longform' ? 'active' : ''}`}
               onClick={() => setWritingMode('longform')}
+              role="tab"
+              aria-selected={writingMode === 'longform'}
             >
               长文写作
             </button>

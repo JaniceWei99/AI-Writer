@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { X, Plus } from 'lucide-react'
 import {
   fetchCustomStyles,
   createCustomStyle,
@@ -136,11 +137,11 @@ export default function StyleEditor({ onClose, onStylesChange }: Props) {
   }
 
   return (
-    <div className="style-editor-overlay" onClick={onClose}>
-      <div className="style-editor-panel" onClick={(e) => e.stopPropagation()}>
+    <div className="style-editor-overlay" onClick={onClose} role="presentation">
+      <div className="style-editor-panel" role="dialog" aria-modal="true" aria-labelledby="style-editor-title" onClick={(e) => e.stopPropagation()}>
         <div className="style-editor-header">
-          <span className="style-editor-title">自定义风格管理</span>
-          <button className="style-editor-close" onClick={onClose}>&times;</button>
+          <span className="style-editor-title" id="style-editor-title">自定义风格管理</span>
+          <button className="style-editor-close" onClick={onClose} aria-label="关闭"><X size={18} /></button>
         </div>
 
         <div className="style-editor-body">
@@ -164,7 +165,7 @@ export default function StyleEditor({ onClose, onStylesChange }: Props) {
                     className="style-list-del"
                     onClick={() => handleDelete(item.id)}
                     title="删除"
-                  >&times;</button>
+                  ><X size={16} /></button>
                 </div>
               ))
             )}
@@ -172,7 +173,7 @@ export default function StyleEditor({ onClose, onStylesChange }: Props) {
 
           {!showForm && (
             <button className="btn style-btn-new" onClick={handleNew}>
-              + 新建自定义风格
+              <Plus size={16} /> 新建自定义风格
             </button>
           )}
 
@@ -232,7 +233,7 @@ export default function StyleEditor({ onClose, onStylesChange }: Props) {
                 </span>
               </label>
 
-              {error && <div className="style-form-error">{error}</div>}
+              {error && <div className="style-form-error" role="alert">{error}</div>}
 
               <div className="style-form-actions">
                 <button className="btn style-btn-cancel" onClick={handleCancel}>取消</button>

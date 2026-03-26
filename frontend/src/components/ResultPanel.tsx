@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Copy, Edit3, Save, XCircle, RefreshCw, ChevronDown, GitCompare, Sparkles } from 'lucide-react'
 import Markdown from 'react-markdown'
 import { downloadDocx, downloadTxt, downloadMd, downloadPdf, downloadPptx } from '../services/api'
 import { TaskType, PPT_TEMPLATE_OPTIONS } from '../types'
@@ -130,7 +131,7 @@ export default function ResultPanel({
   if (error) {
     return (
       <div className="result-panel">
-        <div className="result-error">
+        <div className="result-error" role="alert">
           <strong>出错了</strong>
           <p>{error}</p>
           {onRetry && (
@@ -145,7 +146,16 @@ export default function ResultPanel({
     return (
       <div className="result-panel">
         <div className="result-empty">
-          <p>选择任务类型，输入内容，点击「开始处理」查看结果</p>
+          <div className="empty-icon">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="6" y="10" width="36" height="28" rx="4" stroke="currentColor" strokeWidth="1.5" opacity="0.3"/>
+              <line x1="12" y1="18" x2="36" y2="18" stroke="currentColor" strokeWidth="1.5" opacity="0.2"/>
+              <line x1="12" y1="24" x2="30" y2="24" stroke="currentColor" strokeWidth="1.5" opacity="0.2"/>
+              <line x1="12" y1="30" x2="26" y2="30" stroke="currentColor" strokeWidth="1.5" opacity="0.2"/>
+            </svg>
+          </div>
+          <p className="empty-title">开始创作</p>
+          <p className="empty-subtitle">选择任务类型，输入内容，点击「开始处理」</p>
         </div>
       </div>
     )
@@ -153,6 +163,7 @@ export default function ResultPanel({
 
   return (
     <div className={`result-panel ${isPpt ? 'result-panel-ppt' : ''}`}>
+      {loading && <div className="result-progress-bar"><div className="result-progress-fill" /></div>}
       <div className="result-header">
         <span className="result-title">生成结果</span>
         {isPpt ? (
@@ -169,6 +180,7 @@ export default function ResultPanel({
             className={`btn-compare ${showCompare ? 'active' : ''}`}
             onClick={() => setShowCompare(!showCompare)}
           >
+            <GitCompare size={14} />
             {showCompare ? '关闭对比' : '对比原文'}
           </button>
         )}
@@ -188,12 +200,13 @@ export default function ResultPanel({
           </div>
         </div>
       ) : (
-        <div className="result-content">
+        <div className="result-content" aria-live="polite">
           {editing ? (
             <textarea
               className="result-edit-area"
               value={editText}
               onChange={(e) => setEditText(e.target.value)}
+              aria-label="编辑生成结果"
             />
           ) : (
             <>
@@ -207,16 +220,17 @@ export default function ResultPanel({
       {result && !loading && (
         <div className="result-actions">
           <button className="btn btn-copy" onClick={handleCopy}>
-            {copyMsg || '复制结果'}
+            <Copy size={14} />
+            {copyMsg || '复制'}
           </button>
 
           {editing ? (
             <>
-              <button className="btn btn-edit-save" onClick={handleToggleEdit}>保存编辑</button>
-              <button className="btn btn-edit-cancel" onClick={handleCancelEdit}>取消</button>
+              <button className="btn btn-edit-save" onClick={handleToggleEdit}><Save size={14} /> 保存</button>
+              <button className="btn btn-edit-cancel" onClick={handleCancelEdit}><XCircle size={14} /> 取消</button>
             </>
           ) : (
-            <button className="btn btn-edit" onClick={handleToggleEdit}>编辑</button>
+            <button className="btn btn-edit" onClick={handleToggleEdit}><Edit3 size={14} /> 编辑</button>
           )}
 
           {/* PPT mode: prominent PPTX export + template inline */}
@@ -258,7 +272,7 @@ export default function ResultPanel({
               onClick={(e) => { e.stopPropagation(); setShowExportMenu(!showExportMenu) }}
               disabled={exporting}
             >
-              {exporting ? '导出中...' : (isPpt ? '其他格式 \u25be' : '导出 \u25be')}
+              {exporting ? '导出中...' : (isPpt ? '其他格式' : '导出')} <ChevronDown size={12} />
             </button>
             {showExportMenu && (
               <div className="export-menu">
@@ -274,7 +288,7 @@ export default function ResultPanel({
           </div>
 
           {onRegenerate && (
-            <button className="btn btn-regenerate" onClick={onRegenerate}>换一个</button>
+            <button className="btn btn-regenerate" onClick={onRegenerate}><RefreshCw size={14} /> 换一个</button>
           )}
 
           {exportMsg && (
@@ -286,21 +300,36 @@ export default function ResultPanel({
       )}
       {result && !loading && onRefine && (
         <div className="refine-bar">
-          <textarea
-            className="refine-input"
-            value={refineText}
-            onChange={(e) => setRefineText(e.target.value)}
-            onKeyDown={handleRefineKeyDown}
-            placeholder="对结果不满意？输入修改意见，继续优化..."
-            rows={1}
-          />
-          <button
-            className="btn btn-refine"
-            onClick={handleRefineSubmit}
-            disabled={!refineText.trim()}
-          >
-            继续优化
-          </button>
+          <div className="refine-suggestions">
+            {['更简洁', '更正式', '扩写详细一些', '换个角度'].map((s) => (
+              <button
+                key={s}
+                className="refine-suggestion-tag"
+                onClick={() => { if (onRefine) onRefine(s) }}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+          <div className="refine-input-row">
+            <textarea
+              className="refine-input"
+              value={refineText}
+              onChange={(e) => setRefineText(e.target.value)}
+              onKeyDown={handleRefineKeyDown}
+              placeholder="或输入自定义修改意见..."
+              rows={1}
+              aria-label="输入修改意见"
+            />
+            <button
+              className="btn btn-refine"
+              onClick={handleRefineSubmit}
+              disabled={!refineText.trim()}
+            >
+              <Sparkles size={14} />
+              优化
+            </button>
+          </div>
         </div>
       )}
       {result && !loading && <QualityPanel content={result} />}

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { X } from 'lucide-react'
 import { fetchModels, healthCheck } from '../services/api'
 import './SettingsPanel.css'
 
@@ -16,6 +17,8 @@ const PROVIDER_LABELS: Record<string, string> = {
   openai: 'OpenAI',
   deepseek: 'DeepSeek',
   qwen: '通义千问',
+  glm: 'GLM (Llama-4-Maverick)',
+  mm: 'MM (Llama-3.1-8B)',
 }
 
 export function loadSettings(): AppSettings {
@@ -72,11 +75,11 @@ export default function SettingsPanel({ settings, onSave, onClose }: Props) {
   }
 
   return (
-    <div className="settings-overlay" onClick={onClose}>
-      <div className="settings-panel" onClick={(e) => e.stopPropagation()}>
+    <div className="settings-overlay" onClick={onClose} role="presentation">
+      <div className="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settings-title" onClick={(e) => e.stopPropagation()}>
         <div className="settings-header">
-          <span className="settings-title">Settings</span>
-          <button className="settings-close" onClick={onClose}>&times;</button>
+          <span className="settings-title" id="settings-title">Settings</span>
+          <button className="settings-close" onClick={onClose} aria-label="关闭设置"><X size={18} /></button>
         </div>
 
         <div className="settings-body">

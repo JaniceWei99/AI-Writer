@@ -39,16 +39,16 @@
 }
 
 .mode-card-ppt.active {
-  --_ppt-accent: #e67e22;
-  border-color: var(--_ppt-accent);
-  background: rgba(230, 126, 34, 0.08);
-  box-shadow: 0 0 0 1px var(--_ppt-accent);
+
+  border-color: var(--color-ppt);
+  background: var(--color-ppt-bg);
+  box-shadow: 0 0 0 1px var(--color-ppt);
 }
 
 .mode-card-ppt:hover:not(:disabled) {
-  --_ppt-accent: #e67e22;
-  border-color: var(--_ppt-accent);
-  background: rgba(230, 126, 34, 0.05);
+
+  border-color: var(--color-ppt);
+  background: var(--color-ppt-bg-subtle);
 }
 
 .mode-card:disabled {
@@ -81,8 +81,8 @@
 /* === PPT mode form border accent === */
 
 .writing-form.mode-ppt .content-input:focus {
-  border-color: #e67e22;
-  box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.12);
+  border-color: var(--color-ppt);
+  box-shadow: 0 0 0 3px var(--color-ppt-ring);
 }
 
 /* === PPT form options === */
@@ -118,9 +118,9 @@
 }
 
 .ppt-tpl-card.active {
-  border-color: #e67e22;
+  border-color: var(--color-ppt);
   color: var(--text-h);
-  background: rgba(230, 126, 34, 0.06);
+  background: var(--color-ppt-bg-subtle);
 }
 
 .ppt-tpl-color {
@@ -151,19 +151,19 @@
 }
 
 .ppt-form-options .ppt-image-toggle input[type="checkbox"] {
-  accent-color: #e67e22;
+  accent-color: var(--color-ppt);
   cursor: pointer;
 }
 
 /* === PPT submit button === */
 
 .btn-submit-ppt {
-  background: #e67e22;
+  background: var(--color-ppt);
   color: #fff;
 }
 
 .btn-submit-ppt:hover:not(:disabled) {
-  background: #d35400;
+  background: var(--color-ppt-hover);
 }
 
 .btn-submit-ppt:disabled {
@@ -182,7 +182,7 @@
 .link-btn {
   background: none;
   border: none;
-  color: #e67e22;
+  color: var(--color-ppt);
   cursor: pointer;
   font-size: 12px;
   padding: 0;
@@ -266,11 +266,82 @@
   font-size: 11px;
 }
 
-.options-row {
+/* === Submit row (always visible) === */
+
+.submit-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.submit-row-spacer {
+  flex: 1;
+}
+
+.btn-advanced-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.btn-advanced-toggle:hover:not(:disabled) {
+  color: var(--text-h);
+  background: var(--code-bg);
+}
+
+.btn-advanced-toggle:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.advanced-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: inline-block;
+  margin-left: 2px;
+}
+
+/* === Advanced section (collapsible) === */
+
+.advanced-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--code-bg);
+  border-radius: 8px;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.advanced-row {
   display: flex;
   align-items: center;
   gap: 16px;
   flex-wrap: wrap;
+}
+
+.btn-submit,
+.btn-submit-ppt {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-stop {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .option {
@@ -296,6 +367,7 @@
   border-color: var(--accent);
 }
 
+/* (spacer no longer needed; kept for backward compat) */
 .option-spacer {
   flex: 1;
 }
@@ -325,12 +397,12 @@
 }
 
 .btn-stop {
-  background: #ef4444;
+  background: var(--color-error);
   color: #fff;
 }
 
 .btn-stop:hover {
-  background: #dc2626;
+  background: var(--color-error-dark);
 }
 
 /* === Attachment upload === */
@@ -349,6 +421,7 @@
 .btn-upload {
   display: inline-flex;
   align-items: center;
+  gap: 5px;
   padding: 7px 16px;
   border: 1px dashed var(--border);
   border-radius: 6px;
@@ -417,7 +490,7 @@
 
 .attachment-error {
   font-size: 13px;
-  color: #ef4444;
+  color: var(--color-error);
 }
 
 /* === Template management === */
@@ -443,6 +516,9 @@
   font-size: 13px;
   cursor: pointer;
   transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .btn-template:hover:not(:disabled),
@@ -538,7 +614,7 @@
 
 .template-del:hover {
   opacity: 1;
-  color: #ef4444;
+  color: var(--color-error);
 }
 
 .template-save-form {
@@ -586,19 +662,14 @@
   cursor: not-allowed;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
 /* === Offline banner === */
 
 .offline-banner {
   padding: 10px 16px;
   border-radius: 8px;
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  color: #ef4444;
+  background: var(--color-error-bg);
+  border: 1px solid var(--color-error-border);
+  color: var(--color-error);
   font-size: 13px;
   line-height: 1.5;
   animation: fadeIn 0.2s ease-out;
