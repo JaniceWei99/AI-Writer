@@ -12,7 +12,7 @@ set MODEL=qwen3.5:9b
 
 echo.
 echo ==========================================
-echo    AI Writing Assistant  v1.3.1
+echo    AI Writing Assistant  v1.5.0
 echo ==========================================
 echo.
 

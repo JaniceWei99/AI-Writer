@@ -109,7 +109,7 @@ brew install node
 5. 终端窗口会自动打开，显示启动进程：
    ```
    ==========================================
-      AI Writing Assistant  v1.3.1
+      AI Writing Assistant  v1.5.0
    ==========================================
 
    [INFO]  Checking Ollama...

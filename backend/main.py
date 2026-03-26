@@ -37,7 +37,7 @@ async def lifespan(app: FastAPI):
     logger.info("Shutting down")
 
 
-app = FastAPI(title="AI 写作助手", version="1.3.1", lifespan=lifespan)
+app = FastAPI(title="AI 写作助手", version="1.5.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
