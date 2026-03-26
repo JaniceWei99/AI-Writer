@@ -704,45 +704,6 @@
   cursor: not-allowed;
 }
 
-/* === Tone control (segmented) === */
-
-.tone-control {
-  display: flex;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.tone-btn {
-  padding: 5px 14px;
-  border: none;
-  background: transparent;
-  color: var(--text);
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.15s;
-  border-right: 1px solid var(--border);
-}
-
-.tone-btn:last-child {
-  border-right: none;
-}
-
-.tone-btn:hover:not(:disabled) {
-  color: var(--text-h);
-  background: var(--code-bg);
-}
-
-.tone-btn.active {
-  background: var(--accent);
-  color: #fff;
-}
-
-.tone-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
 /* === Word count target === */
 
 .word-target-group {

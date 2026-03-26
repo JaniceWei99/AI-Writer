@@ -13,6 +13,7 @@ describe('ResultPanel', () => {
   it('shows empty state with "开始创作" when no result and not loading', () => {
     render(<ResultPanel {...defaultProps} />)
     expect(screen.getByText('开始创作')).toBeInTheDocument()
+    expect(screen.getByText('在左侧输入内容，点击开始处理')).toBeInTheDocument()
   })
 
   it('shows error message', () => {
@@ -40,32 +41,6 @@ describe('ResultPanel', () => {
   it('hides copy button while loading', () => {
     render(<ResultPanel {...defaultProps} result="partial" loading={true} tokenCount={2} />)
     expect(screen.queryByText('复制')).not.toBeInTheDocument()
-  })
-
-  // --- Quick start cards ---
-
-  it('renders quick start cards in empty state', () => {
-    const onQuickStart = vi.fn()
-    render(<ResultPanel {...defaultProps} onQuickStart={onQuickStart} />)
-    expect(screen.getByText('写一篇文章')).toBeInTheDocument()
-    expect(screen.getByText('润色文本')).toBeInTheDocument()
-    expect(screen.getByText('翻译内容')).toBeInTheDocument()
-  })
-
-  it('calls onQuickStart with correct task type', () => {
-    const onQuickStart = vi.fn()
-    render(<ResultPanel {...defaultProps} onQuickStart={onQuickStart} />)
-    fireEvent.click(screen.getByText('写一篇文章'))
-    expect(onQuickStart).toHaveBeenCalledWith('generate')
-    fireEvent.click(screen.getByText('润色文本'))
-    expect(onQuickStart).toHaveBeenCalledWith('polish')
-    fireEvent.click(screen.getByText('翻译内容'))
-    expect(onQuickStart).toHaveBeenCalledWith('translate')
-  })
-
-  it('does not render quick start cards when onQuickStart is not provided', () => {
-    render(<ResultPanel {...defaultProps} />)
-    expect(screen.queryByText('写一篇文章')).not.toBeInTheDocument()
   })
 
   // --- Word count progress ---

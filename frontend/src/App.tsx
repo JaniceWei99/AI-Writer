@@ -66,9 +66,6 @@ function App() {
   type WritingMode = 'standard' | 'longform'
   const [writingMode, setWritingMode] = useState<WritingMode>('standard')
 
-  // Quick start from empty state cards
-  const [quickStart, setQuickStart] = useState<{ taskType: string } | null>(null)
-
   // Word count target
   const [wordCountTarget, setWordCountTarget] = useState(0)
 
@@ -270,10 +267,6 @@ function App() {
     getHistory().then(setHistory).catch(() => {})
   }, [])
 
-  const handleQuickStart = useCallback((taskType: string) => {
-    setQuickStart({ taskType })
-  }, [])
-
   const cycleTheme = () => {
     setTheme((prev) => {
       const order: Theme[] = ['auto', 'light', 'dark']
@@ -352,8 +345,6 @@ function App() {
                 unsplashKey={settings.unsplashKey}
                 customStyles={customStyles}
                 onOpenStyleEditor={() => setShowStyleEditor(true)}
-                quickStart={quickStart}
-                onQuickStartConsumed={() => setQuickStart(null)}
                 wordCountTarget={wordCountTarget}
                 onWordCountTargetChange={setWordCountTarget}
               />
@@ -370,7 +361,6 @@ function App() {
                 taskType={lastTaskType}
                 style={lastStyle}
                 unsplashKey={settings.unsplashKey}
-                onQuickStart={handleQuickStart}
                 wordCountTarget={wordCountTarget}
               />
             </>

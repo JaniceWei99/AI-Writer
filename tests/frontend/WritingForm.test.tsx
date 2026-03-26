@@ -111,57 +111,6 @@ describe('WritingForm', () => {
     expect(screen.getByText('生成PPT大纲')).toBeInTheDocument()
   })
 
-  // --- Tone control ---
-
-  it('renders tone control buttons', () => {
-    render(<WritingForm {...defaultProps} />)
-    expect(screen.getByText('随意')).toBeInTheDocument()
-    expect(screen.getByText('标准')).toBeInTheDocument()
-    expect(screen.getByText('正式')).toBeInTheDocument()
-  })
-
-  it('appends casual tone instruction to content on submit', () => {
-    const onSubmit = vi.fn()
-    render(<WritingForm {...defaultProps} onSubmit={onSubmit} />)
-    const textarea = screen.getByPlaceholderText(/请输入主题/)
-    fireEvent.change(textarea, { target: { value: '测试' } })
-    fireEvent.click(screen.getByText('随意'))
-    fireEvent.click(screen.getByText('开始处理'))
-    expect(onSubmit).toHaveBeenCalledWith(
-      expect.objectContaining({
-        content: expect.stringContaining('轻松随意'),
-      }),
-    )
-  })
-
-  it('appends formal tone instruction to content on submit', () => {
-    const onSubmit = vi.fn()
-    render(<WritingForm {...defaultProps} onSubmit={onSubmit} />)
-    const textarea = screen.getByPlaceholderText(/请输入主题/)
-    fireEvent.change(textarea, { target: { value: '测试' } })
-    fireEvent.click(screen.getByText('正式'))
-    fireEvent.click(screen.getByText('开始处理'))
-    expect(onSubmit).toHaveBeenCalledWith(
-      expect.objectContaining({
-        content: expect.stringContaining('正式严谨'),
-      }),
-    )
-  })
-
-  it('does not append tone instruction for standard tone', () => {
-    const onSubmit = vi.fn()
-    render(<WritingForm {...defaultProps} onSubmit={onSubmit} />)
-    const textarea = screen.getByPlaceholderText(/请输入主题/)
-    fireEvent.change(textarea, { target: { value: '测试' } })
-    // standard is the default, just submit
-    fireEvent.click(screen.getByText('开始处理'))
-    expect(onSubmit).toHaveBeenCalledWith(
-      expect.objectContaining({
-        content: '测试',
-      }),
-    )
-  })
-
   // --- Word count target ---
 
   it('renders word target input', () => {
@@ -190,23 +139,6 @@ describe('WritingForm', () => {
     const input = screen.getByPlaceholderText('—')
     fireEvent.change(input, { target: { value: '500' } })
     expect(onWordCountTargetChange).toHaveBeenCalledWith(500)
-  })
-
-  // --- Quick start ---
-
-  it('sets task type on quick start', () => {
-    const onQuickStartConsumed = vi.fn()
-    render(
-      <WritingForm
-        {...defaultProps}
-        quickStart={{ taskType: 'polish' }}
-        onQuickStartConsumed={onQuickStartConsumed}
-      />,
-    )
-    // After quick start, the polish tab should be active
-    const polishTab = screen.getByText('文本润色')
-    expect(polishTab.classList.contains('active')).toBe(true)
-    expect(onQuickStartConsumed).toHaveBeenCalledOnce()
   })
 
   // --- Advanced options toggle ---

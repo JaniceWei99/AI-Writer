@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Copy, Edit3, Save, XCircle, RefreshCw, GitCompare, Sparkles, PenLine, Languages, MoreHorizontal } from 'lucide-react'
+import { Copy, Edit3, Save, XCircle, RefreshCw, GitCompare, Sparkles, MoreHorizontal } from 'lucide-react'
 import Markdown from 'react-markdown'
 import { downloadDocx, downloadTxt, downloadMd, downloadPdf, downloadPptx } from '../services/api'
 import { TaskType, PPT_TEMPLATE_OPTIONS } from '../types'
@@ -25,7 +25,6 @@ interface Props {
   unsplashKey?: string
   pptTemplate?: string
   pptWithImages?: boolean
-  onQuickStart?: (taskType: string) => void
   wordCountTarget?: number
 }
 
@@ -34,7 +33,7 @@ export default function ResultPanel({
   onRegenerate, onRetry, onResultChange, onRefine,
   originalContent, taskType, style, unsplashKey,
   pptTemplate: pptTemplateProp, pptWithImages: pptWithImagesProp,
-  onQuickStart, wordCountTarget,
+  wordCountTarget,
 }: Props) {
   const [exporting, setExporting] = useState(false)
   const [exportMsg, setExportMsg] = useState('')
@@ -163,32 +162,7 @@ export default function ResultPanel({
             </svg>
           </div>
           <p className="empty-title">开始创作</p>
-          <p className="empty-subtitle">选择一个方式快速开始</p>
-          {onQuickStart && (
-            <div className="empty-quick-cards">
-              <button className="empty-quick-card" onClick={() => onQuickStart('generate')}>
-                <PenLine size={18} />
-                <div className="quick-card-text">
-                  <span className="quick-card-title">写一篇文章</span>
-                  <span className="quick-card-desc">输入主题，AI 帮你生成</span>
-                </div>
-              </button>
-              <button className="empty-quick-card" onClick={() => onQuickStart('polish')}>
-                <Sparkles size={18} />
-                <div className="quick-card-text">
-                  <span className="quick-card-title">润色文本</span>
-                  <span className="quick-card-desc">优化措辞，提升质量</span>
-                </div>
-              </button>
-              <button className="empty-quick-card" onClick={() => onQuickStart('translate')}>
-                <Languages size={18} />
-                <div className="quick-card-text">
-                  <span className="quick-card-title">翻译内容</span>
-                  <span className="quick-card-desc">多语言互译</span>
-                </div>
-              </button>
-            </div>
-          )}
+          <p className="empty-subtitle">在左侧输入内容，点击开始处理</p>
         </div>
       </div>
     )
