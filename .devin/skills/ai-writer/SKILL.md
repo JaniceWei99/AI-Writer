@@ -30,7 +30,7 @@ triggers:
 
 # AI 写作助手 — 项目开发技能
 
-你正在维护 **AI 写作助手 v1.3.1** 项目，一个基于多 LLM Provider 的本地写作 + PPT 生成工具。
+你正在维护 **AI 写作助手 v1.5.0** 项目，一个基于多 LLM Provider 的本地写作 + PPT 生成工具。
 
 ---
 
@@ -71,8 +71,8 @@ my_first/
 │   └── src/
 │       ├── App.tsx                # 主应用（主题、认证、历史、标准/长文模式切换）
 │       ├── components/
-│       │   ├── WritingForm.tsx     # 输入表单（任务类型、风格选择、自定义风格、模板管理）
-│       │   ├── ResultPanel.tsx     # 结果展示 + 5 格式导出 + 对比视图 + 继续优化
+│       │   ├── WritingForm.tsx     # 输入表单（模式切换、任务类型、语气控制、字数目标、快速启动、高级选项折叠）
+│       │   ├── ResultPanel.tsx     # 结果展示 + 快速启动卡片 + 字数进度 + 溢出菜单 + 5 格式导出 + 对比视图
 │       │   ├── HistoryPanel.tsx    # 侧边栏历史记录（搜索、风格标签显示）
 │       │   ├── SettingsPanel.tsx   # 设置面板（模型/温度/Provider 信息）
 │       │   ├── AuthPanel.tsx       # 用户认证（登录/注册/登出）
@@ -347,9 +347,9 @@ cd frontend && npx vitest run
 ## 前端关键数据流
 
 ### 标准写作流程
-1. 用户在 `WritingForm` 中选择任务类型/风格/输入内容
+1. 用户在 `WritingForm` 中选择任务类型/风格/语气/输入内容（或通过 ResultPanel 快速启动卡片选择任务）
 2. `App.tsx` 调用 `streamWriting()` 通过 SSE 流式接收
-3. `ResultPanel` 实时展示结果 + 编辑/导出/对比/质量评分
+3. `ResultPanel` 实时展示结果 + 编辑/导出（溢出菜单）/对比/质量评分/字数进度
 4. 完成后自动调用 `addHistory()` 保存历史记录（含 style 字段）
 5. `HistoryPanel` 显示记录列表，每条显示任务类型标签和风格标签
 
@@ -364,6 +364,40 @@ cd frontend && npx vitest run
 - PPT 记录使用橙色主题
 - 风格标签支持内置风格（`STYLE_LABELS` 映射）和自定义风格（通过 `customStyles` prop 查找 slug→name）
 - 点击记录可恢复结果到 ResultPanel
+
+---
+
+## CSS 设计令牌系统
+
+前端通过 `index.css` 中的 CSS 自定义属性统一管理视觉令牌，组件 CSS 一律引用变量而非硬编码颜色：
+
+| 类别 | 变量前缀 | 说明 |
+|------|----------|------|
+| 语义颜色 | `--color-ppt` / `--color-error` / `--color-success` / `--color-warning` / `--color-info` | 各含 bg/border/ring/hover/dark 变体 |
+| 基础色彩 | `--text` / `--bg` / `--border` / `--accent` | 文本、背景、边框、强调色 |
+| 阴影 | `--shadow-sm` / `--shadow-md` / `--shadow-lg` / `--shadow-xl` | 4 级阴影 |
+| 间距 | `--sp-1` 到 `--sp-8` | 4px ~ 32px |
+| 圆角 | `--radius-sm` / `--radius-md` / `--radius-lg` / `--radius-xl` | 4 级圆角 |
+| 过渡 | `--ease-fast` / `--ease-base` / `--ease-slow` | 3 种速度 |
+| z-index | `--z-dropdown` / `--z-modal` / `--z-toast` | 层级管理 |
+
+**暗色模式**：`prefers-color-scheme: dark` 自动切换 + `data-theme="dark"` 手动切换。
+**共享动画**：`fadeIn` / `slideUp` / `pulse` / `blink` 统一在 `index.css` 中定义，组件 CSS 不再重复声明。
+**无障碍**：全局 `focus-visible` 焦点环 + `prefers-reduced-motion` 支持。
+
+### WAI-ARIA 无障碍规范
+
+所有组件遵循 WAI-ARIA 模式：
+
+- **对话框**（ConfirmDialog/SettingsPanel/AuthPanel/StyleEditor）：`role="dialog"/"alertdialog"` + `aria-modal` + `aria-labelledby` + 遮罩层 `role="presentation"`
+- **错误提示**：`role="alert"`（WritingForm/ResultPanel/AuthPanel/QualityPanel/StyleEditor）
+- **实时区域**：`aria-live="polite"` + `role="status"`（ResultPanel/LongFormPanel/App）
+- **标签导航**：`role="tablist"` + `role="tab"` + `aria-selected`（App.tsx 写作模式）
+- **可展开**：`aria-expanded`（App 侧边栏、QualityPanel）
+- **辅助区域**：`role="complementary"`（HistoryPanel）
+- **图标按钮**：18+ 个 `aria-label`
+
+> **修改组件时，必须保持已有的无障碍属性不被删除**，新增交互元素需添加相应 ARIA 标注。
 
 ---
 
@@ -426,8 +460,8 @@ tests/
 │   ├── test_routers.py       # API 端点测试
 │   └── test_schemas.py       # Pydantic 模型测试
 ├── frontend/
-│   ├── WritingForm.test.tsx   # 表单组件测试
-│   ├── ResultPanel.test.tsx   # 结果面板测试
+│   ├── WritingForm.test.tsx   # 表单组件测试（含语气控制、字数目标、快速启动、高级选项折叠）
+│   ├── ResultPanel.test.tsx   # 结果面板测试（含快速卡片、字数进度、溢出菜单）
 │   ├── HistoryPanel.test.tsx  # 历史面板测试
 │   ├── history.test.ts        # 历史服务测试
 │   └── setup.ts               # 测试配置

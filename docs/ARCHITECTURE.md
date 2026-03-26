@@ -88,7 +88,7 @@ my_first/
 
 ### `main.py` — 应用入口
 
-- 创建 FastAPI 实例（标题 `AI 写作助手`，版本 `1.3.1`）
+- 创建 FastAPI 实例（标题 `AI 写作助手`，版本 `1.5.0`）
 - 使用 `lifespan` 上下文管理器，在启动时初始化数据库（`init_db()`）
 - 配置 CORS 中间件，允许前端开发服务器跨域请求：
   - `http://localhost:5173`（Vite 开发服务器）
@@ -276,6 +276,43 @@ SQLAlchemy ORM 模型 `HistoryRecord`，映射到 `history` 表：
 
 ## 前端模块说明
 
+### CSS 设计令牌系统 (`index.css`)
+
+前端使用 CSS 自定义属性（Custom Properties）构建统一的设计令牌系统，所有组件通过变量引用实现主题一致性：
+
+| 令牌类别 | 变量前缀 | 数量 | 说明 |
+| -------- | -------- | ---- | ---- |
+| 基础色彩 | `--text` / `--bg` / `--border` / `--accent` | 11 | 文本、背景、边框、强调色及变体 |
+| 语义色彩 | `--color-ppt` / `--color-error` / `--color-success` / `--color-warning` / `--color-info` | 19 | 含 bg/border/ring/hover/dark 变体 |
+| 阴影 | `--shadow-*` | 5 | sm / md / lg / xl / 默认 |
+| 间距 | `--sp-*` | 7 | 4px 到 32px 刻度 |
+| 圆角 | `--radius-*` | 4 | sm / md / lg / xl |
+| 过渡 | `--ease-*` | 3 | fast / base / slow |
+| 字体 | `--sans` / `--heading` / `--mono` | 3 | 三种字体族 |
+| z-index | `--z-*` | 3 | dropdown / modal / toast |
+
+**暗色模式**：通过 `@media (prefers-color-scheme: dark)` 自动适配 + `[data-theme="dark"]` 手动切换，所有令牌在暗色模式下自动翻转。
+
+**共享动画**：4 个 `@keyframes`（`fadeIn`、`slideUp`、`pulse`、`blink`）统一定义，组件不再各自声明重复动画。
+
+**无障碍**：
+- 全局 `:focus-visible` 焦点环样式，确保键盘导航可见
+- `prefers-reduced-motion` 媒体查询，为动画敏感用户禁用非必要动画
+
+### WAI-ARIA 无障碍标注
+
+所有前端组件遵循 WAI-ARIA 规范，提供以下无障碍支持：
+
+| 模式 | 涉及组件 | 使用的 ARIA 属性 |
+| ---- | -------- | ---------------- |
+| 对话框 | ConfirmDialog、SettingsPanel、AuthPanel、StyleEditor | `role="dialog"` / `role="alertdialog"`、`aria-modal="true"`、`aria-labelledby`、`role="presentation"`（遮罩层） |
+| 错误提示 | WritingForm、ResultPanel、AuthPanel、QualityPanel、StyleEditor | `role="alert"` |
+| 实时区域 | ResultPanel、LongFormPanel、App | `aria-live="polite"`、`role="status"` |
+| 标签导航 | App | `role="tablist"`、`role="tab"`、`aria-selected` |
+| 可展开 | App（侧边栏）、QualityPanel | `aria-expanded` |
+| 辅助区域 | HistoryPanel | `role="complementary"` |
+| 图标按钮 | 全部组件 | 18+ 个 `aria-label` 标注（主题切换、设置、关闭、删除、搜索清除等） |
+
 ### `App.tsx` — 根组件
 
 全局状态管理与业务编排的中枢：
@@ -291,6 +328,8 @@ SQLAlchemy ORM 模型 `HistoryRecord`，映射到 `history` 表：
 | `activeId`    | `string`        | 当前选中的历史记录 ID             |                  |
 | `sidebarOpen` | `boolean`       | 移动端侧边栏展开状态              |                  |
 | `theme`       | `string`        | 深色模式状态（system/light/dark） |                  |
+| `quickStart`  | `object \| null`| 快速启动指令（taskType）          |                  |
+| `wordCountTarget` | `number`   | 用户设定的目标字数                |                  |
 
 **核心逻辑**：
 
@@ -305,21 +344,28 @@ SQLAlchemy ORM 模型 `HistoryRecord`，映射到 `history` 表：
 
 ### `components/WritingForm.tsx` — 写作表单
 
-- **任务类型切换**：标签页形式展示四种任务
-- **文本输入区**：根据任务类型切换占位提示语，底部实时显示字数统计
+- **模式切换**：卡片式切换"文案创作"（text）和"演示文稿"（ppt）两种模式
+- **任务类型切换**：标签页形式展示四种任务（仅文案模式）
+- **文本输入区**：根据任务类型切换占位提示语，底部实时显示字数统计 + 字数目标输入框
+- **语气控制**：分段控制按钮（随意 | 标准 | 正式），非标准语气自动追加语气指令到内容末尾
+- **高级选项折叠**：风格选择、目标语言、模板管理、附件上传折叠在"高级选项"可展开区域内
 - **文件上传**：调用 `/api/writing/upload` 提取文件文本，作为附件参考
-- **风格选择**：9 种风格选项
+- **风格选择**：9 种内置风格 + 自定义风格选项
 - **目标语言**：翻译任务时显示，支持 6 种语言
+- **快速启动**：接收 `quickStart` prop 自动切换任务类型并聚焦输入框
 - **离线降级**：接收 `online` prop，服务离线时禁用提交按钮并显示红色横幅引导信息
 
 ### `components/ResultPanel.tsx` — 结果面板
 
+- **空状态**：显示插画 + "开始创作"文案 + 3 张快速启动卡片（写文章/润色/翻译）
 - 使用 react-markdown 渲染生成结果
-- **结果编辑**：支持编辑/保存/取消，在导出前修改生成内容
+- **结果编辑**：支持编辑/保存/取消，在导出前修改生成内容（收入溢出菜单）
 - **对比视图**：润色/翻译任务左右对比原文与生成结果
 - **一键复制**：成功/失败提示，按钮文字临时变为"已复制"/"复制失败"
+- **操作栏精简**：复制 + 换一个按钮常驻；编辑 + 导出格式收入 `⋯` 溢出菜单
 - **多格式导出**：Word（.docx）、PDF（.pdf）、PPT（.pptx）、纯文本（.txt）、Markdown（.md）
-- **"换一个"按钮**：用相同参数重新生成不同结果
+- **字数进度条**：设置字数目标后显示进度条，达标变绿
+- **Token 计数动画**：token 数字带过渡动画
 - **"重新尝试"按钮**：请求失败后显示
 - 显示 token 计数、加载状态
 
@@ -508,3 +554,15 @@ SQLAlchemy ORM 模型 `HistoryRecord`，映射到 `history` 表：
 ### 9. PPTX 导出策略
 
 后端在内存中生成 `.pptx` 文件，不写入磁盘。采用 Markdown 大纲格式作为中间表示，解析为结构化幻灯片数据后再生成演示文稿。AI Prompt 指导 LLM 在标题中嵌入 `[layout: xxx]` 版式标记，解析器提取后分发到 6 种专用渲染器（bullets、stats、comparison、timeline、quote、grid），实现多样化排版。4 种预置主题通过颜色方案和字体配置区分，支持自动识别封面、内容页和结束页。Unsplash / Bing 配图为可选功能，无 API Key 时不影响基本导出。
+
+### 10. CSS 设计令牌系统
+
+所有组件的颜色、阴影、间距、圆角等视觉属性通过 CSS 自定义属性（`index.css`）统一管理，而非在各组件 CSS 中硬编码。好处包括：
+- **主题一致性**：修改一处变量即可全局生效
+- **暗色模式**：只需在 `:root` 和 `[data-theme="dark"]` 中切换变量值
+- **可维护性**：消除跨文件的重复颜色声明
+- 组件 CSS 中保留的唯一硬编码颜色是 PPT 模板选择器的色板预览（`.ppt-tpl-*`），属于字面量展示
+
+### 11. WAI-ARIA 无障碍
+
+遵循 WAI-ARIA 最佳实践，为所有交互组件添加语义角色和状态属性。对话框使用 `role="dialog"` + `aria-modal` + `aria-labelledby` 模式；错误提示使用 `role="alert"` 确保屏幕阅读器即时播报；动态内容区域使用 `aria-live="polite"` 实现非侵入式更新通知。所有图标按钮均有 `aria-label` 文本标注。
