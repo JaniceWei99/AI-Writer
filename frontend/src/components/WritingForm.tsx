@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { PenLine, Presentation, ChevronDown, ChevronRight, X, Plus, Paperclip, Send, Square } from 'lucide-react'
+import { PenLine, Presentation, ChevronDown, X, Plus, Paperclip, Send, Square } from 'lucide-react'
 import {
   TaskType,
   TASK_LABELS,
@@ -49,9 +49,6 @@ export default function WritingForm({ onSubmit, loading, onStop, online, unsplas
   const [showTemplates, setShowTemplates] = useState(false)
   const [saveName, setSaveName] = useState('')
   const [showSave, setShowSave] = useState(false)
-
-  // Advanced options toggle
-  const [showAdvanced, setShowAdvanced] = useState(false)
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -231,23 +228,128 @@ export default function WritingForm({ onSubmit, loading, onStop, online, unsplas
         </div>
       )}
 
-      {/* Submit row — always visible, clean */}
-      <div className="submit-row">
-        <button
-          className="btn-advanced-toggle"
-          onClick={() => setShowAdvanced(!showAdvanced)}
-          disabled={loading}
-          type="button"
-        >
-          {showAdvanced ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-          高级选项
-          {(attachmentName || style) && !showAdvanced && (
-            <span className="advanced-indicator" />
+      {/* Style & attachment options */}
+      {mode === 'text' && (
+        <div className="options-row">
+          <label className="option">
+            <span>风格</span>
+            <select value={style} onChange={(e) => setStyle(e.target.value)} disabled={loading}>
+              {TEXT_STYLE_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+              {customStyles.length > 0 && (
+                <optgroup label="自定义风格">
+                  {customStyles.map((s) => (
+                    <option key={s.slug} value={s.slug}>{s.name}</option>
+                  ))}
+                </optgroup>
+              )}
+            </select>
+            {onOpenStyleEditor && (
+              <button
+                className="btn-style-manage"
+                onClick={onOpenStyleEditor}
+                disabled={loading}
+                title="管理自定义风格"
+              ><Plus size={14} /></button>
+            )}
+          </label>
+
+          {taskType === TaskType.TRANSLATE && (
+            <label className="option">
+              <span>目标语言</span>
+              <select value={targetLang} onChange={(e) => setTargetLang(e.target.value)} disabled={loading}>
+                {LANG_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </label>
           )}
-        </button>
 
-        <div className="submit-row-spacer" />
+          {/* Template buttons */}
+          <div className="template-group">
+            <div className="template-dropdown-wrap">
+              <button
+                className="btn btn-template"
+                onClick={(e) => { e.stopPropagation(); setShowTemplates(!showTemplates); setShowSave(false) }}
+                disabled={loading}
+              >
+                模板 <ChevronDown size={12} />
+              </button>
+              {showTemplates && (
+                <div className="template-dropdown">
+                  {templates.length === 0 ? (
+                    <div className="template-empty">暂无保存的模板</div>
+                  ) : (
+                    templates.map((t) => (
+                      <div key={t.id} className="template-item">
+                        <button className="template-load" onClick={() => handleLoadTemplate(t)}>
+                          <span className="template-name">{t.name}</span>
+                          <span className="template-type">{TASK_LABELS[t.task_type as TaskType]}</span>
+                        </button>
+                        <button className="template-del" onClick={() => handleDeleteTemplate(t.id)}><X size={14} /></button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+            <button
+              className="btn btn-template-save"
+              onClick={() => { setShowSave(!showSave); setShowTemplates(false) }}
+              disabled={loading || !content.trim()}
+              title="保存当前内容为模板"
+            >
+              存为模板
+            </button>
+            {showSave && (
+              <div className="template-save-form">
+                <input
+                  type="text"
+                  className="template-save-input"
+                  placeholder="模板名称..."
+                  value={saveName}
+                  onChange={(e) => setSaveName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleSaveTemplate() }}
+                  autoFocus
+                />
+                <button className="btn btn-template-confirm" onClick={handleSaveTemplate} disabled={!saveName.trim()}>
+                  保存
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
+      <div className="attachment-row">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept={ACCEPT_TYPES}
+          onChange={handleFileChange}
+          disabled={loading || uploading}
+          className="file-input-hidden"
+          id="file-upload"
+        />
+        <label htmlFor="file-upload" className={`btn btn-upload ${loading || uploading ? 'disabled' : ''}`}>
+          <Paperclip size={14} />
+          {uploading ? '解析中...' : '上传附件'}
+        </label>
+        <span className="attachment-hint">支持 PDF、Word、PPT、TXT 等文件作为参考资料</span>
+
+        {attachmentName && (
+          <span className="attachment-tag">
+            <span className="attachment-name">{attachmentName}</span>
+            <button className="attachment-remove" onClick={handleRemoveFile} disabled={loading} title="移除附件"><X size={14} /></button>
+          </span>
+        )}
+
+        {uploadError && <span className="attachment-error" role="alert">{uploadError}</span>}
+      </div>
+
+      {/* Submit row */}
+      <div className="submit-row">
         {loading ? (
           <button className="btn btn-stop" onClick={onStop}>
             <Square size={14} />
@@ -265,130 +367,6 @@ export default function WritingForm({ onSubmit, loading, onStop, online, unsplas
           </button>
         )}
       </div>
-
-      {/* Collapsible advanced options */}
-      {showAdvanced && (
-        <div className="advanced-section">
-          {mode === 'text' && (
-            <div className="advanced-row">
-              <label className="option">
-                <span>风格</span>
-                <select value={style} onChange={(e) => setStyle(e.target.value)} disabled={loading}>
-                  {TEXT_STYLE_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
-                  ))}
-                  {customStyles.length > 0 && (
-                    <optgroup label="自定义风格">
-                      {customStyles.map((s) => (
-                        <option key={s.slug} value={s.slug}>{s.name}</option>
-                      ))}
-                    </optgroup>
-                  )}
-                </select>
-                {onOpenStyleEditor && (
-                  <button
-                    className="btn-style-manage"
-                    onClick={onOpenStyleEditor}
-                    disabled={loading}
-                    title="管理自定义风格"
-                  ><Plus size={14} /></button>
-                )}
-              </label>
-
-              {taskType === TaskType.TRANSLATE && (
-                <label className="option">
-                  <span>目标语言</span>
-                  <select value={targetLang} onChange={(e) => setTargetLang(e.target.value)} disabled={loading}>
-                    {LANG_OPTIONS.map((o) => (
-                      <option key={o.value} value={o.value}>{o.label}</option>
-                    ))}
-                  </select>
-                </label>
-              )}
-
-              {/* Template buttons */}
-              <div className="template-group">
-                <div className="template-dropdown-wrap">
-                  <button
-                    className="btn btn-template"
-                    onClick={(e) => { e.stopPropagation(); setShowTemplates(!showTemplates); setShowSave(false) }}
-                    disabled={loading}
-                  >
-                    模板 <ChevronDown size={12} />
-                  </button>
-                  {showTemplates && (
-                    <div className="template-dropdown">
-                      {templates.length === 0 ? (
-                        <div className="template-empty">暂无保存的模板</div>
-                      ) : (
-                        templates.map((t) => (
-                          <div key={t.id} className="template-item">
-                            <button className="template-load" onClick={() => handleLoadTemplate(t)}>
-                              <span className="template-name">{t.name}</span>
-                              <span className="template-type">{TASK_LABELS[t.task_type as TaskType]}</span>
-                            </button>
-                            <button className="template-del" onClick={() => handleDeleteTemplate(t.id)}><X size={14} /></button>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  )}
-                </div>
-                <button
-                  className="btn btn-template-save"
-                  onClick={() => { setShowSave(!showSave); setShowTemplates(false) }}
-                  disabled={loading || !content.trim()}
-                  title="保存当前内容为模板"
-                >
-                  存为模板
-                </button>
-                {showSave && (
-                  <div className="template-save-form">
-                    <input
-                      type="text"
-                      className="template-save-input"
-                      placeholder="模板名称..."
-                      value={saveName}
-                      onChange={(e) => setSaveName(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === 'Enter') handleSaveTemplate() }}
-                      autoFocus
-                    />
-                    <button className="btn btn-template-confirm" onClick={handleSaveTemplate} disabled={!saveName.trim()}>
-                      保存
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          <div className="attachment-row">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept={ACCEPT_TYPES}
-              onChange={handleFileChange}
-              disabled={loading || uploading}
-              className="file-input-hidden"
-              id="file-upload"
-            />
-            <label htmlFor="file-upload" className={`btn btn-upload ${loading || uploading ? 'disabled' : ''}`}>
-              <Paperclip size={14} />
-              {uploading ? '解析中...' : '上传附件'}
-            </label>
-            <span className="attachment-hint">支持 PDF、Word、PPT、TXT 等文件作为参考资料</span>
-
-            {attachmentName && (
-              <span className="attachment-tag">
-                <span className="attachment-name">{attachmentName}</span>
-                <button className="attachment-remove" onClick={handleRemoveFile} disabled={loading} title="移除附件"><X size={14} /></button>
-              </span>
-            )}
-
-            {uploadError && <span className="attachment-error" role="alert">{uploadError}</span>}
-          </div>
-        </div>
-      )}
 
       {online === false && (
         <div className="offline-banner" role="alert">

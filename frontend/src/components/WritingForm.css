@@ -278,57 +278,14 @@
   flex: 1;
 }
 
-.btn-advanced-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 12px;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--text);
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s;
-  position: relative;
-}
+/* === Options row (style, language, templates) === */
 
-.btn-advanced-toggle:hover:not(:disabled) {
-  color: var(--text-h);
-  background: var(--code-bg);
-}
-
-.btn-advanced-toggle:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.advanced-indicator {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--accent);
-  display: inline-block;
-  margin-left: 2px;
-}
-
-/* === Advanced section (collapsible) === */
-
-.advanced-section {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 14px 16px;
-  background: var(--code-bg);
-  border-radius: 8px;
-  animation: fadeIn 0.15s ease-out;
-}
-
-.advanced-row {
+.options-row {
   display: flex;
   align-items: center;
   gap: 16px;
   flex-wrap: wrap;
+  padding: 10px 0;
 }
 
 .btn-submit,

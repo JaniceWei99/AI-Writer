@@ -58,28 +58,20 @@ describe('WritingForm', () => {
     expect(onStop).toHaveBeenCalledOnce()
   })
 
-  it('shows target language selector only for translate task (behind advanced)', () => {
+  it('shows target language selector only for translate task', () => {
     render(<WritingForm {...defaultProps} />)
-    // Expand advanced options first
-    fireEvent.click(screen.getByText('高级选项'))
     expect(screen.queryByText('目标语言')).not.toBeInTheDocument()
     fireEvent.click(screen.getByText('文本翻译'))
     expect(screen.getByText('目标语言')).toBeInTheDocument()
   })
 
-  it('shows style selector in advanced options', () => {
+  it('shows style selector directly', () => {
     render(<WritingForm {...defaultProps} />)
-    // Style is behind advanced options
-    expect(screen.queryByText('风格')).not.toBeInTheDocument()
-    fireEvent.click(screen.getByText('高级选项'))
     expect(screen.getByText('风格')).toBeInTheDocument()
   })
 
-  it('shows upload button in advanced options', () => {
+  it('shows upload button directly', () => {
     render(<WritingForm {...defaultProps} />)
-    // Upload is behind advanced options
-    expect(screen.queryByText('上传附件')).not.toBeInTheDocument()
-    fireEvent.click(screen.getByText('高级选项'))
     expect(screen.getByText('上传附件')).toBeInTheDocument()
   })
 
@@ -139,20 +131,6 @@ describe('WritingForm', () => {
     const input = screen.getByPlaceholderText('—')
     fireEvent.change(input, { target: { value: '500' } })
     expect(onWordCountTargetChange).toHaveBeenCalledWith(500)
-  })
-
-  // --- Advanced options toggle ---
-
-  it('toggles advanced options section', () => {
-    render(<WritingForm {...defaultProps} />)
-    // Initially hidden
-    expect(screen.queryByText('风格')).not.toBeInTheDocument()
-    // Click to expand
-    fireEvent.click(screen.getByText('高级选项'))
-    expect(screen.getByText('风格')).toBeInTheDocument()
-    // Click again to collapse
-    fireEvent.click(screen.getByText('高级选项'))
-    expect(screen.queryByText('风格')).not.toBeInTheDocument()
   })
 
   // --- Accessibility tests ---
