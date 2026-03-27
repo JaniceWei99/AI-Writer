@@ -55,8 +55,8 @@ my_first/
 │   ├── prompts/
 │   │   └── writing.py             # 15 个 prompt 模板 + build_prompt() + STYLE_MAP + 诗词校验
 │   ├── services/
-│   │   ├── llm_provider.py        # 多 Provider 抽象层（ollama/openai/deepseek/qwen）
-│   │   ├── ollama_client.py       # Ollama API 封装
+│   │   ├── llm_provider.py        # 多 Provider 抽象层（ollama Chat API /api/chat + openai/deepseek/qwen）
+│   │   ├── ollama_client.py       # Ollama Chat API 封装（legacy，用于诗词校验路径）
 │   │   ├── auth.py                # JWT 认证（bcrypt + HS256，72h 过期）
 │   │   ├── text_analysis.py       # 纯算法文本质量评分（可读性 0-100）
 │   │   ├── docx_export.py         # Markdown → Word
@@ -201,6 +201,8 @@ my_first/
 | `LLM_PROVIDER`      | `ollama`                         | 激活的 Provider（ollama/openai/deepseek/qwen） |
 | `OLLAMA_BASE_URL`   | `http://localhost:11434`         | Ollama 地址              |
 | `OLLAMA_MODEL`      | `qwen3.5:9b`                    | Ollama 默认模型          |
+| `OLLAMA_NUM_GPU`    | `99`                             | GPU 最大层数             |
+| `OLLAMA_NUM_PREDICT`| `4096`                           | 最大生成 token 数        |
 | `OPENAI_API_KEY`    | —                                | OpenAI API 密钥          |
 | `OPENAI_BASE_URL`   | `https://api.openai.com/v1`     | OpenAI 兼容地址          |
 | `OPENAI_MODEL`      | `gpt-4o`                        | OpenAI 默认模型          |
@@ -500,6 +502,16 @@ docs/
 - SQLite 数据库自动创建在 `backend/data/app.db`
 - 所有核心配置通过环境变量覆盖，默认值保持本机开发兼容
 - 已知问题：`LongFormPanel.tsx` 有一个未使用变量 `currentChapter`（tsc 严格模式报 TS6133），但 vite build 可正常通过
+
+### LLM 调用架构
+
+- **主入口**：`llm_provider.py`，所有写作 API 统一通过此模块调用 LLM
+- **Ollama 使用 Chat API**（`/api/chat`），非旧版 Generate API（`/api/generate`）
+- **Prompt 拆分**：`_prompt_to_messages()` 将 prompt 在内容标记处（`主题：`、`原文：`等）分为 system + user 消息，防止 chat 模型回显 prompt
+- **模型过滤**：`_EXCLUDED_MODELS` 排除 OCR、Embedding 等非文本生成模型（deepseek-ocr、nomic-embed 等）
+- **超时时间**：Ollama 300 秒，云端 Provider 120 秒
+- `ollama_client.py` 是 legacy 模块，仅在诗词校验路径中使用，同样使用 `/api/chat`
+- **开发时前端环境变量** `VITE_API_BASE` 应为空值（`VITE_API_BASE=`），请求通过 Vite proxy 转发到后端
 
 ---
 

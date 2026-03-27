@@ -4,7 +4,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from routers.writing import router as writing_router
 from routers.history import router as history_router
 from routers.styles import router as styles_router
@@ -30,7 +30,7 @@ STATIC_DIR = Path(__file__).resolve().parent.parent / "frontend" / "dist"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Starting AI 写作助手 v1.3.1")
+    logger.info("Starting AI 写作助手 v1.5.0")
     await init_db()
     logger.info("Database ready")
     yield
@@ -78,6 +78,11 @@ async def get_models():
 # Serve pre-built frontend static files (production mode)
 if STATIC_DIR.is_dir():
     app.mount("/assets", StaticFiles(directory=STATIC_DIR / "assets"), name="assets")
+
+    @app.get("/sw.js")
+    async def no_service_worker():
+        """Return 404 for sw.js to unregister stale Service Workers."""
+        return Response(status_code=404)
 
     @app.get("/{full_path:path}")
     async def serve_spa(full_path: str):

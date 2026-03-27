@@ -1,0 +1,36 @@
+# =============================================================
+#  AI Writing Assistant — Docker Compose (VDI Deployment)
+#
+#  Uses external LLM APIs (glm + mm) instead of local Ollama.
+#
+#  Usage:
+#    docker compose -f docker-compose.vdi.yml up -d
+#    docker compose -f docker-compose.vdi.yml logs -f app
+#    docker compose -f docker-compose.vdi.yml down
+# =============================================================
+
+services:
+  # ---- Web Application (FastAPI + React) ----
+  app:
+    build: .
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    environment:
+      # Use GLM as the default LLM provider
+      - LLM_PROVIDER=glm
+      # GLM provider (Llama-4-Maverick-17B)
+      - GLM_API_KEY=EMPTY
+      - GLM_BASE_URL=http://100.80.20.2:4000/v1
+      - GLM_MODEL=meta-llama/Llama-4-Maverick-17B-128E-Instruct
+      # MM provider (Llama-3.1-8B)
+      - MM_API_KEY=EMPTY
+      - MM_BASE_URL=http://100.80.20.5:4001/v1
+      - MM_MODEL=meta-llama/Llama-3.1-8B-Instruct
+      # App settings
+      - CORS_ORIGINS=${CORS_ORIGINS:-*}
+    volumes:
+      - app-data:/app/data    # persist SQLite database
+    restart: unless-stopped
+
+volumes:
+  app-data:

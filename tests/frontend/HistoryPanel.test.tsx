@@ -49,13 +49,15 @@ describe('HistoryPanel', () => {
     expect(onSelect).toHaveBeenCalledWith(items[0])
   })
 
-  it('calls onClear when clear button clicked', () => {
+  it('calls onClear when clear button clicked and confirmed', () => {
     const onClear = vi.fn()
     const items = [makeItem()]
     render(
       <HistoryPanel items={items} activeId="" onSelect={vi.fn()} onDelete={vi.fn()} onClear={onClear} />,
     )
     fireEvent.click(screen.getByText('清空'))
+    // ConfirmDialog appears — click the confirm button
+    fireEvent.click(screen.getByText('确认'))
     expect(onClear).toHaveBeenCalledOnce()
   })
 
@@ -66,8 +68,40 @@ describe('HistoryPanel', () => {
     render(
       <HistoryPanel items={items} activeId="" onSelect={onSelect} onDelete={onDelete} onClear={vi.fn()} />,
     )
-    fireEvent.click(screen.getByTitle('删除'))
+    fireEvent.click(screen.getByLabelText('删除此记录'))
     expect(onDelete).toHaveBeenCalledWith('abc')
     expect(onSelect).not.toHaveBeenCalled()
+  })
+
+  // --- Accessibility tests ---
+
+  it('panel has role=complementary', () => {
+    render(
+      <HistoryPanel items={[]} activeId="" onSelect={vi.fn()} onDelete={vi.fn()} onClear={vi.fn()} />,
+    )
+    expect(screen.getByRole('complementary')).toBeInTheDocument()
+  })
+
+  it('panel has aria-label="历史记录"', () => {
+    render(
+      <HistoryPanel items={[]} activeId="" onSelect={vi.fn()} onDelete={vi.fn()} onClear={vi.fn()} />,
+    )
+    expect(screen.getByLabelText('历史记录')).toBeInTheDocument()
+  })
+
+  it('clear button has aria-label', () => {
+    const items = [makeItem()]
+    render(
+      <HistoryPanel items={items} activeId="" onSelect={vi.fn()} onDelete={vi.fn()} onClear={vi.fn()} />,
+    )
+    expect(screen.getByLabelText('清空所有历史记录')).toBeInTheDocument()
+  })
+
+  it('delete button has aria-label="删除此记录"', () => {
+    const items = [makeItem()]
+    render(
+      <HistoryPanel items={items} activeId="" onSelect={vi.fn()} onDelete={vi.fn()} onClear={vi.fn()} />,
+    )
+    expect(screen.getByLabelText('删除此记录')).toBeInTheDocument()
   })
 })

@@ -81,17 +81,17 @@
 
 .btn-stop-lf {
   padding: 8px 16px;
-  border: 1px solid #ef4444;
+  border: 1px solid var(--color-error);
   border-radius: 6px;
   background: transparent;
-  color: #ef4444;
+  color: var(--color-error);
   font-size: 13px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .btn-stop-lf:hover {
-  background: rgba(239, 68, 68, 0.1);
+  background: var(--color-error-bg);
 }
 
 .btn-reset-lf {
@@ -144,10 +144,10 @@
 
 .longform-error {
   padding: 10px 14px;
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: var(--color-error-bg);
+  border: 1px solid var(--color-error-border);
   border-radius: 8px;
-  color: #ef4444;
+  color: var(--color-error);
   font-size: 13px;
   margin-bottom: 12px;
 }
@@ -273,7 +273,7 @@
 }
 
 .expansion-chapter.done {
-  border-color: rgba(34, 197, 94, 0.3);
+  border-color: var(--color-success-border);
 }
 
 .expansion-chapter-header {
@@ -302,12 +302,7 @@
 }
 
 .chapter-status-dot.done {
-  background: #22c55e;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
+  background: var(--color-success);
 }
 
 .chapter-num-label {
@@ -353,21 +348,16 @@
   animation: blink 0.8s infinite;
 }
 
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
-}
-
 @media (max-width: 768px) {
   .longform-panel {
     padding: 14px 16px;
   }
-  
+
   .outline-review-header {
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .expansion-header {
     flex-direction: column;
     align-items: flex-start;

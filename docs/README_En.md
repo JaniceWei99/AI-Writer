@@ -1,4 +1,4 @@
-# AI Writing Assistant v1.3.1
+# AI Writing Assistant v1.5.0
 
 > A local LLM-powered all-in-one writing tool with multi-style article generation, multi-layout PPT export, classical poetry creation, and multilingual translation. Fully local data — zero privacy concerns.
 
@@ -8,7 +8,7 @@
 
 ### Key Highlights
 
-- **8 Writing Styles**: Literary, college entrance essay, Xiaohongshu viral, WeChat Official Account, Toutiao headlines, AI drama script, PPT outline, classical poetry
+- **9 Writing Styles**: Literary, college entrance essay, Xiaohongshu viral, WeChat Official Account, Toutiao headlines, AI drama script, PPT outline, classical poetry, Zhihu top answers
 - **Professional PPT Export**: 4 theme palettes x 6 slide layouts, with AI-powered automatic layout selection
 - **5 Export Formats**: Word / PDF / PPT / TXT / Markdown
 - **Fully Local**: Ollama + SQLite, no internet required, zero data leakage risk
@@ -29,6 +29,10 @@
 | **File Upload**              | 8 formats            | PDF / Word / TXT / Markdown / CSV / JSON / XML / HTML (max 10MB)                                                     |
 | **Multi-format Export**      | 5 formats            | Word(.docx) / PDF(.pdf) / PPT(.pptx) / TXT(.txt) / Markdown(.md)                                                     |
 | **History**                  | Database persistence | SQLite storage, keyword search, survives browser changes                                                             |
+| **User Authentication**      | Registration/Login   | JWT-based authentication with user isolation                                                                         |
+| **Custom Styles**            | Create/Edit/Delete   | User-defined writing style templates with custom prompts                                                             |
+| **Text Quality Scoring**     | Four dimensions      | Readability/vocabulary diversity/sentence length/structure scoring (0-100)                                            |
+| **Long-form Writing**        | Chapter-based        | Outline generation → chapter expansion → final assembly                                                              |
 
 ---
 
@@ -95,6 +99,7 @@ AI automatically annotates the best layout for each slide, with optional Bing im
 | ---------- | -------------------------------------- |
 | Ollama     | Local LLM runtime                      |
 | qwen3.5:9b | Default model (switchable in settings) |
+| Multi-Provider | Ollama (default) / OpenAI / DeepSeek / Qwen, unified abstraction layer |
 
 ---
 
@@ -138,6 +143,9 @@ AI automatically annotates the best layout for each slide, with optional Bing im
 - **CORS**: Cross-origin access enabled for frontend dev server
 - **Health Check**: `GET /api/health` for real-time service status
 - **Database Persistence**: History stored in SQLite, independent of browser cache
+- **Multi-LLM Provider**: Supports Ollama, OpenAI, DeepSeek, and Qwen, switchable via environment variables
+- **User Authentication**: JWT HS256 + bcrypt, 72-hour token expiry
+- **Custom Styles**: Users can create and manage custom writing style templates
 
 ---
 
@@ -184,54 +192,62 @@ Visit: http://localhost:5173
 ```
 my_first/
 ├── backend/                    # Backend (Python FastAPI)
-│   ├── main.py                 # App entry point, FastAPI instance, CORS, logging, rate limiting, DB init
-│   ├── db.py                   # SQLite + SQLAlchemy async database configuration
+│   ├── main.py                 # App entry point, FastAPI instance, CORS, SPA hosting, health check, model list
+│   ├── db.py                   # SQLite + SQLAlchemy async database config (with lightweight migration)
 │   ├── logging_config.py       # Structured logging configuration
 │   ├── models/
 │   │   ├── schemas.py          # Pydantic data model definitions
-│   │   └── history.py          # History record ORM model
+│   │   ├── history.py          # History record ORM model (with user_id FK)
+│   │   ├── user.py             # User ORM model (username + hashed_password)
+│   │   └── custom_style.py     # Custom style ORM model (name, slug, prompt_template)
 │   ├── routers/
-│   │   ├── writing.py          # Writing API routes
-│   │   └── history.py          # History CRUD API routes
+│   │   ├── writing.py          # Writing API routes (stream/process/refine/outline/expand-chapter/upload/export-*)
+│   │   ├── history.py          # History CRUD API routes (user-isolated)
+│   │   ├── styles.py           # Custom style CRUD API routes
+│   │   ├── auth.py             # User auth API routes (register/login/me)
+│   │   └── analysis.py         # Text quality analysis API routes
 │   ├── middleware/
 │   │   ├── __init__.py         # Request logging middleware
 │   │   └── rate_limit.py       # IP rate limiting middleware
 │   ├── services/
-│   │   ├── ollama_client.py    # Ollama API client
+│   │   ├── llm_provider.py     # Multi-LLM Provider abstraction (Ollama/OpenAI/DeepSeek/Qwen)
+│   │   ├── ollama_client.py    # Ollama Chat API client (legacy, used for poetry validation)
+│   │   ├── auth.py             # JWT authentication service (bcrypt + HS256, 72h expiry)
+│   │   ├── text_analysis.py    # Algorithmic text quality scoring (readability 0-100)
 │   │   ├── file_parser.py      # File text extraction service
 │   │   ├── docx_export.py      # Word document export service
 │   │   ├── pdf_export.py       # PDF document export service
 │   │   ├── pptx_export.py      # PPT presentation export service (6 layouts)
 │   │   └── unsplash.py         # Image search service (Bing / Unsplash)
 │   ├── prompts/
-│   │   └── writing.py          # Writing prompt templates
+│   │   └── writing.py          # 15 writing prompt templates
 │   ├── data/                   # SQLite database file directory
 │   └── pyproject.toml          # Project configuration and dependencies
 ├── frontend/                   # Frontend (React + TypeScript + Vite)
 │   └── src/
-│       ├── App.tsx             # Root component, state management and streaming logic
+│       ├── App.tsx             # Root component, global state, theme, auth, standard/long-form mode
 │       ├── components/
-│       │   ├── WritingForm.tsx  # Task selection, text input, file upload, template management
-│       │   ├── ResultPanel.tsx  # Result rendering, editing, multi-format export, comparison view
-│       │   ├── HistoryPanel.tsx # History records and keyword search
+│       │   ├── WritingForm.tsx  # Task selection, text input, tone control, word count target, advanced options
+│       │   ├── ResultPanel.tsx  # Result rendering, quick-start cards, word count progress, overflow menu, exports
+│       │   ├── HistoryPanel.tsx # History records, keyword search, style label display
 │       │   ├── SettingsPanel.tsx# Model/parameter settings panel
+│       │   ├── AuthPanel.tsx   # User auth panel (login/register/logout)
+│       │   ├── QualityPanel.tsx# Text quality scoring panel (4 dimensions, 0-100)
+│       │   ├── LongFormPanel.tsx# Long-form chapter-based generation (outline → expand → merge)
+│       │   ├── StyleEditor.tsx # Custom style editor
 │       │   └── ConfirmDialog.tsx# Confirmation dialog component
 │       ├── services/
-│       │   ├── api.ts          # API request functions (including multi-format and PPTX export)
+│       │   ├── api.ts          # API functions (streaming/export/custom style CRUD)
+│       │   ├── auth.ts         # JWT auth client (localStorage + Bearer injection)
 │       │   ├── history.ts      # Backend history API client
 │       │   └── templates.ts    # Prompt template management
 │       └── types/
 │           └── index.ts        # TypeScript type definitions and constants
-├── tests/                      # Test directory (117 test cases)
-└── docs/                       # Project documentation
-    ├── README.md               # Project introduction (Chinese)
-    ├── README_En.md            # Project introduction (English, this file)
-    ├── SPEC.md                 # Detailed functional specification (Chinese)
-    ├── SPEC_En.md              # Detailed functional specification (English)
-    ├── ARCHITECTURE.md         # Architecture design document (Chinese)
-    ├── ARCHITECTURE_En.md      # Architecture design document (English)
-    ├── CHANGELOG.md            # Version changelog (Chinese)
-    └── CHANGELOG_En.md         # Version changelog (English)
+├── tests/                      # Test directory
+├── docs/                       # Project documentation (Chinese/English bilingual)
+├── Dockerfile                  # Multi-stage build (Node frontend → Python backend)
+├── docker-compose.yml          # app + ollama service orchestration
+└── start.bat / start.command   # One-click startup scripts (Windows/macOS)
 ```
 
 ---
@@ -240,6 +256,8 @@ my_first/
 
 | Version | Date       | Major Changes                                                                  |
 | ------- | ---------- | ------------------------------------------------------------------------------ |
+| v1.5.0  | 2026-03-26 | Quick-start cards, token count animation, word count target, tone control, streamlined action bar |
+| v1.4.0  | 2026-03-26 | CSS design token system, auto dark mode, WAI-ARIA accessibility, shared animations |
 | v1.3.1  | 2026-03-23 | Unified version numbering, PPT generation stable release                       |
 | v1.3.0  | 2026-03-23 | PPT multi-layout system: 6 slide layout types + AI auto-layout annotation      |
 | v1.2.0  | 2026-03-22 | PPT export: 4 theme templates + Unsplash/Bing image integration                |

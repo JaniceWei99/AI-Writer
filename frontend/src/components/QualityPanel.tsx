@@ -24,10 +24,10 @@ interface Props {
 }
 
 function scoreColor(score: number): string {
-  if (score >= 80) return '#22c55e'
-  if (score >= 60) return '#eab308'
+  if (score >= 80) return 'var(--color-success)'
+  if (score >= 60) return 'var(--color-warning)'
   if (score >= 40) return '#f97316'
-  return '#ef4444'
+  return 'var(--color-error)'
 }
 
 function scoreLabel(score: number): string {
@@ -83,6 +83,7 @@ export default function QualityPanel({ content }: Props) {
         className={`quality-toggle ${expanded ? 'active' : ''}`}
         onClick={handleAnalyze}
         disabled={loading}
+        aria-expanded={expanded}
       >
         {loading ? '分析中...' : data ? (expanded ? '收起质量分析' : '展开质量分析') : '文本质量分析'}
         {data && !expanded && (
@@ -92,7 +93,7 @@ export default function QualityPanel({ content }: Props) {
         )}
       </button>
 
-      {error && <span className="quality-error">{error}</span>}
+      {error && <span className="quality-error" role="alert">{error}</span>}
 
       {expanded && data && (
         <div className="quality-content">

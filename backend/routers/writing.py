@@ -86,7 +86,7 @@ async def process_writing(req: WritingRequest):
 async def stream_writing(req: WritingRequest):
     """流式处理写作请求，实时返回文本。"""
     default_model = get_default_model()
-    logger.info("Stream request: task=%s model=%s content_len=%d", req.task_type.value, req.model or default_model, len(req.content))
+    logger.info("Stream request: task=%s style=%s model=%s content_len=%d", req.task_type.value, req.style, req.model or default_model, len(req.content))
     custom_tpl = await _get_custom_prompt(req.style)
     is_poetry = req.task_type.value == "generate" and is_poetry_request(req.content) and not custom_tpl
     model = req.model or default_model

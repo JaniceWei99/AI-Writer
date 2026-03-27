@@ -10,18 +10,31 @@
 
 ## 接口概览
 
-| 方法   | 路径                       | 说明                         |
-| ------ | -------------------------- | ---------------------------- |
-| GET    | `/api/health`              | 健康检查                     |
-| POST   | `/api/writing/upload`      | 上传文件并提取文本内容       |
-| POST   | `/api/writing/process`     | 非流式处理写作请求           |
-| POST   | `/api/writing/stream`      | 流式处理写作请求（SSE）      |
-| POST   | `/api/writing/export-docx` | 将 Markdown 导出为 Word 文档 |
-| POST   | `/api/writing/export-pdf`  | 将 Markdown 导出为 PDF 文档  |
-| GET    | `/api/history`             | 获取历史记录列表             |
-| POST   | `/api/history`             | 新增历史记录                 |
-| DELETE | `/api/history/{id}`        | 删除单条历史记录             |
-| DELETE | `/api/history`             | 清空全部历史记录             |
+| 方法   | 路径                         | 说明                         |
+| ------ | ---------------------------- | ---------------------------- |
+| GET    | `/api/health`                | 健康检查 + Provider 信息     |
+| GET    | `/api/models`                | 获取可用模型列表             |
+| POST   | `/api/writing/upload`        | 上传文件并提取文本内容       |
+| POST   | `/api/writing/process`       | 非流式处理写作请求           |
+| POST   | `/api/writing/stream`        | 流式处理写作请求（SSE）      |
+| POST   | `/api/writing/refine`        | 继续优化/多轮对话            |
+| POST   | `/api/writing/outline`       | 生成长文大纲（流式）         |
+| POST   | `/api/writing/expand-chapter`| 展开单个章节（流式）         |
+| POST   | `/api/writing/export-docx`   | 将 Markdown 导出为 Word 文档 |
+| POST   | `/api/writing/export-pdf`    | 将 Markdown 导出为 PDF 文档  |
+| POST   | `/api/writing/export-pptx`   | 将 Markdown 导出为 PPT 文档  |
+| GET    | `/api/history`               | 获取历史记录列表             |
+| POST   | `/api/history`               | 新增历史记录                 |
+| DELETE | `/api/history/{id}`          | 删除单条历史记录             |
+| DELETE | `/api/history`               | 清空全部历史记录             |
+| GET    | `/api/styles`                | 获取自定义风格列表           |
+| POST   | `/api/styles`                | 创建自定义风格               |
+| PUT    | `/api/styles/{style_id}`     | 更新自定义风格               |
+| DELETE | `/api/styles/{style_id}`     | 删除自定义风格               |
+| POST   | `/api/auth/register`         | 用户注册                     |
+| POST   | `/api/auth/login`            | 用户登录                     |
+| GET    | `/api/auth/me`               | 获取当前用户信息             |
+| POST   | `/api/analysis/quality`      | 文本质量评分                 |
 
 ---
 
@@ -36,7 +49,9 @@
 ```json
 {
   "status": "ok",
-  "model": "qwen3.5:9b"
+  "provider": "ollama",
+  "model": "qwen3.5:9b",
+  "available_providers": ["ollama"]
 }
 ```
 
@@ -44,6 +59,29 @@
 
 ```bash
 curl http://localhost:8000/api/health
+```
+
+---
+
+## 1.5 获取可用模型列表
+
+### `GET /api/models`
+
+返回当前 LLM Provider 中可用的模型列表。自动过滤 OCR、Embedding 等非文本生成模型。
+
+#### 响应
+
+```json
+{
+  "models": ["qwen3.5:9b"],
+  "default": "qwen3.5:9b"
+}
+```
+
+#### 示例
+
+```bash
+curl http://localhost:8000/api/models
 ```
 
 ---
@@ -149,6 +187,7 @@ curl -X POST http://localhost:8000/api/writing/upload \
 | `toutiao`        | 今日头条风格      |
 | `ai_drama`       | AI 短剧脚本风格   |
 | `ppt`            | 生成 PPT 大纲风格 |
+| `zhihu`          | 知乎回答风格      |
 
 ```json
 {
@@ -324,6 +363,148 @@ curl -X POST http://localhost:8000/api/writing/export-pdf \
 
 ---
 
+## 6.5 导出 PPT 演示文稿
+
+### `POST /api/writing/export-pptx`
+
+将 Markdown PPT 大纲导出为 PowerPoint（.pptx）演示文稿，支持主题模板和自动配图。
+
+#### 请求
+
+**Content-Type：** `application/json`
+
+```json
+{
+  "content": "## 封面\n标题：人工智能\n---\n## 第一章 概述\n- 要点一\n- 要点二",
+  "title": "AI演示文稿",
+  "template": "business",
+  "with_images": false,
+  "unsplash_key": ""
+}
+```
+
+| 字段            | 类型    | 必填 | 默认值       | 说明                                    |
+| --------------- | ------- | ---- | ------------ | --------------------------------------- |
+| `content`       | string  | 是   | —            | Markdown PPT 大纲内容                   |
+| `title`         | string  | 否   | `"演示文稿"` | 文档标题                                |
+| `template`      | string  | 否   | `"business"` | 主题模板（business/minimal/green/warm） |
+| `with_images`   | boolean | 否   | `false`      | 是否启用自动配图                        |
+| `unsplash_key`  | string  | 否   | `""`         | Unsplash API Key（配图需要）            |
+
+#### 响应
+
+**Content-Type：** `application/vnd.openxmlformats-officedocument.presentationml.presentation`
+
+返回二进制 `.pptx` 文件。
+
+---
+
+## 6.6 继续优化（多轮对话）
+
+### `POST /api/writing/refine`
+
+基于上次生成结果和用户反馈，以 SSE 流式方式返回改进后的版本。
+
+#### 请求
+
+**Content-Type：** `application/json`
+
+```json
+{
+  "previous_result": "上次生成的文本...",
+  "feedback": "请让语言更加口语化",
+  "model": "",
+  "temperature": null
+}
+```
+
+| 字段              | 类型   | 必填 | 说明                   |
+| ----------------- | ------ | ---- | ---------------------- |
+| `previous_result` | string | 是   | 上一次生成的结果文本   |
+| `feedback`        | string | 是   | 用户反馈/优化指令      |
+| `model`           | string | 否   | 自定义模型名称         |
+| `temperature`     | number | 否   | 生成温度（0-2）        |
+
+#### 响应
+
+**Content-Type：** `text/event-stream`
+
+与 `/api/writing/stream` 格式相同。
+
+---
+
+## 6.7 生成长文大纲
+
+### `POST /api/writing/outline`
+
+根据主题和风格生成结构化长文大纲，以 SSE 流式方式返回。
+
+#### 请求
+
+**Content-Type：** `application/json`
+
+```json
+{
+  "content": "人工智能在教育领域的应用",
+  "style": "literary",
+  "model": "",
+  "temperature": null
+}
+```
+
+| 字段          | 类型   | 必填 | 说明             |
+| ------------- | ------ | ---- | ---------------- |
+| `content`     | string | 是   | 长文主题         |
+| `style`       | string | 否   | 写作风格         |
+| `model`       | string | 否   | 自定义模型名称   |
+| `temperature` | number | 否   | 生成温度（0-2）  |
+
+#### 响应
+
+**Content-Type：** `text/event-stream`
+
+与 `/api/writing/stream` 格式相同。
+
+---
+
+## 6.8 展开单个章节
+
+### `POST /api/writing/expand-chapter`
+
+基于大纲和章节标题，生成该章节的详细内容，以 SSE 流式方式返回。
+
+#### 请求
+
+**Content-Type：** `application/json`
+
+```json
+{
+  "outline": "完整大纲文本...",
+  "chapter_title": "第一章 概述",
+  "chapter_desc": "本章简要介绍背景",
+  "style": "literary",
+  "model": "",
+  "temperature": null
+}
+```
+
+| 字段            | 类型   | 必填 | 说明             |
+| --------------- | ------ | ---- | ---------------- |
+| `outline`       | string | 是   | 完整大纲文本     |
+| `chapter_title` | string | 是   | 章节标题         |
+| `chapter_desc`  | string | 否   | 章节描述         |
+| `style`         | string | 否   | 写作风格         |
+| `model`         | string | 否   | 自定义模型名称   |
+| `temperature`   | number | 否   | 生成温度（0-2）  |
+
+#### 响应
+
+**Content-Type：** `text/event-stream`
+
+与 `/api/writing/stream` 格式相同。
+
+---
+
 ## 7. 历史记录管理
 
 历史记录存储在后端 SQLite 数据库中，支持 CRUD 操作。
@@ -458,3 +639,235 @@ AI 生成端点（`/api/writing/process`、`/api/writing/stream`）启用了 IP 
 ### CORS 跨域
 
 服务默认允许来自 `http://localhost:5173` 和 `http://localhost:3000` 的跨域请求。
+
+---
+
+## 8. 自定义风格管理
+
+自定义风格存储在后端 SQLite 数据库中，支持 CRUD 操作。
+
+**路由前缀：** `/api/styles`
+
+### 8.1 获取自定义风格列表
+
+#### `GET /api/styles`
+
+返回所有自定义风格。
+
+##### 响应
+
+```json
+[
+  {
+    "id": 1,
+    "name": "科技评论",
+    "slug": "tech_review",
+    "prompt_template": "你是一位专业的科技评论家。请根据以下主题写一篇深度评论：\n\n{content}",
+    "description": "科技产品深度评论风格",
+    "created_at": "2026-03-26T10:00:00Z",
+    "updated_at": "2026-03-26T10:00:00Z"
+  }
+]
+```
+
+### 8.2 创建自定义风格
+
+#### `POST /api/styles`
+
+创建一个新的自定义风格。
+
+##### 请求
+
+```json
+{
+  "name": "科技评论",
+  "slug": "tech_review",
+  "prompt_template": "你是一位专业的科技评论家。请根据以下主题写一篇深度评论：\n\n{content}",
+  "description": "科技产品深度评论风格"
+}
+```
+
+| 字段              | 类型   | 必填 | 说明                                          |
+| ----------------- | ------ | ---- | --------------------------------------------- |
+| `name`            | string | 是   | 风格显示名称                                  |
+| `slug`            | string | 是   | 唯一标识（`^[a-z][a-z0-9_]{1,62}$`，内置 slug 受保护） |
+| `prompt_template` | string | 是   | Prompt 模板，必须包含 `{content}` 占位符      |
+| `description`     | string | 否   | 风格描述                                      |
+
+##### 响应（201 Created）
+
+返回创建的风格对象。
+
+##### 错误响应
+
+| 状态码 | 说明                     |
+| ------ | ------------------------ |
+| `409`  | slug 已存在              |
+| `422`  | slug 格式不合法或模板缺少 `{content}` |
+
+### 8.3 更新自定义风格
+
+#### `PUT /api/styles/{style_id}`
+
+更新指定 ID 的自定义风格。
+
+##### 请求
+
+```json
+{
+  "name": "科技深度评论",
+  "prompt_template": "你是一位资深科技记者...\n\n{content}",
+  "description": "更深入的科技评论"
+}
+```
+
+所有字段均为可选，仅更新提供的字段。
+
+##### 响应
+
+返回更新后的风格对象。
+
+### 8.4 删除自定义风格
+
+#### `DELETE /api/styles/{style_id}`
+
+删除指定 ID 的自定义风格。成功返回 `204 No Content`。
+
+---
+
+## 9. 用户认证
+
+**路由前缀：** `/api/auth`
+
+### 9.1 用户注册
+
+#### `POST /api/auth/register`
+
+##### 请求
+
+```json
+{
+  "username": "myuser",
+  "password": "mypassword"
+}
+```
+
+| 字段       | 类型   | 必填 | 说明                      |
+| ---------- | ------ | ---- | ------------------------- |
+| `username` | string | 是   | 用户名（2-32 个字符）     |
+| `password` | string | 是   | 密码（不少于 4 个字符）   |
+
+##### 响应（201 Created）
+
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIs...",
+  "user_id": 1,
+  "username": "myuser"
+}
+```
+
+##### 错误响应
+
+| 状态码 | 说明         |
+| ------ | ------------ |
+| `409`  | 用户名已存在 |
+
+### 9.2 用户登录
+
+#### `POST /api/auth/login`
+
+##### 请求
+
+```json
+{
+  "username": "myuser",
+  "password": "mypassword"
+}
+```
+
+##### 响应
+
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIs...",
+  "user_id": 1,
+  "username": "myuser"
+}
+```
+
+##### 错误响应
+
+| 状态码 | 说明             |
+| ------ | ---------------- |
+| `401`  | 用户名或密码错误 |
+
+### 9.3 获取当前用户
+
+#### `GET /api/auth/me`
+
+需在请求头中携带 `Authorization: Bearer {token}`。
+
+##### 响应
+
+```json
+{
+  "user_id": 1,
+  "username": "myuser"
+}
+```
+
+##### 错误响应
+
+| 状态码 | 说明                |
+| ------ | ------------------- |
+| `401`  | Token 无效或已过期  |
+
+---
+
+## 10. 文本质量评分
+
+**路由前缀：** `/api/analysis`
+
+### `POST /api/analysis/quality`
+
+纯算法文本质量分析，无 AI 依赖。
+
+#### 请求
+
+**Content-Type：** `application/json`
+
+```json
+{
+  "text": "要分析的文本内容..."
+}
+```
+
+| 字段   | 类型   | 必填 | 说明           |
+| ------ | ------ | ---- | -------------- |
+| `text` | string | 是   | 待分析的文本   |
+
+#### 响应
+
+```json
+{
+  "char_count": 1200,
+  "word_count": 600,
+  "sentence_count": 40,
+  "paragraph_count": 8,
+  "reading_time_minutes": 3.0,
+  "sentence_length_score": 85,
+  "vocabulary_diversity_score": 72,
+  "paragraph_balance_score": 90,
+  "structure_score": 78,
+  "readability_score": 81
+}
+```
+
+#### 示例
+
+```bash
+curl -X POST http://localhost:8000/api/analysis/quality \
+  -H "Content-Type: application/json" \
+  -d '{"text": "这是一段需要分析质量的文本..."}'
+```

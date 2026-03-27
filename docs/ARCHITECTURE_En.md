@@ -27,31 +27,38 @@ The AI Writing Assistant is an intelligent writing tool powered by a **local lar
 ```
 my_first/
 ├── backend/
-│   ├── main.py                  # FastAPI application entry point, CORS config, route mounting, lifespan (DB init)
-│   ├── db.py                    # SQLAlchemy async engine + session factory, SQLite database at data/app.db
+│   ├── main.py                  # FastAPI application entry point, CORS config, SPA hosting, /api/health, /api/models
+│   ├── db.py                    # SQLAlchemy async engine + session factory, SQLite at data/app.db (with lightweight migration)
 │   ├── logging_config.py        # Structured logging config (console + file rotation)
 │   ├── pyproject.toml           # Python dependency management (uv)
-│   ├── requirements.txt         # Dependency manifest
 │   ├── data/
 │   │   └── app.db               # SQLite database file (auto-created at runtime)
 │   ├── models/
 │   │   ├── schemas.py           # Pydantic data models: TaskType enum, request/response models (incl. model/temperature)
-│   │   └── history.py           # SQLAlchemy ORM model: HistoryRecord (id, task_type, content, result, style, token_count, created_at)
+│   │   ├── history.py           # SQLAlchemy ORM model: HistoryRecord (with user_id FK)
+│   │   ├── user.py              # SQLAlchemy ORM model: User (username + hashed_password)
+│   │   └── custom_style.py      # SQLAlchemy ORM model: CustomStyle (name, slug, prompt_template)
 │   ├── routers/
-│   │   ├── writing.py           # Writing API routes: upload / process / stream / export-docx / export-pdf
-│   │   └── history.py           # History CRUD routes: GET / POST / DELETE (single + all)
+│   │   ├── writing.py           # Writing API routes: stream / process / refine / outline / expand-chapter / upload / export-*
+│   │   ├── history.py           # History CRUD routes: GET / POST / DELETE (user-isolated)
+│   │   ├── styles.py            # Custom style CRUD routes: GET / POST / PUT / DELETE
+│   │   ├── auth.py              # User auth routes: register / login / me
+│   │   └── analysis.py          # Text quality analysis routes: POST /quality
 │   ├── middleware/
 │   │   ├── __init__.py          # RequestLoggingMiddleware (logs request method/path/status code/duration)
 │   │   └── rate_limit.py        # RateLimitMiddleware (IP sliding-window rate limiting, 10 req/min for AI endpoints)
 │   ├── prompts/
-│   │   └── writing.py           # Prompt templates (9 styles) and poetry validation logic
+│   │   └── writing.py           # 15 prompt templates (9 styles + outline/chapter/refine/poetry/PPT) and poetry validation
 │   ├── services/
-│   │   ├── ollama_client.py     # Ollama HTTP client (generate / generate_stream, supports custom model/temperature)
+│   │   ├── llm_provider.py      # Multi-LLM Provider abstraction (Ollama/OpenAI/DeepSeek/Qwen/GLM/MM)
+│   │   ├── ollama_client.py     # Ollama Chat API client (legacy, used for poetry validation path)
+│   │   ├── auth.py              # JWT auth service (bcrypt + HS256, 72h expiry)
+│   │   ├── text_analysis.py     # Algorithmic text quality scoring (readability 0-100)
 │   │   ├── file_parser.py       # File text extraction (PDF / DOCX / plain text)
 │   │   ├── docx_export.py       # Markdown → Word document conversion
 │   │   ├── pdf_export.py        # Markdown → PDF document conversion (fpdf2, Chinese font support)
-│   │   ├── pptx_export.py       # Markdown → PPTX presentation conversion (python-pptx, 4 theme templates, 6 layouts)
-│   │   └── unsplash.py          # Unsplash image search service (fetches images for PPT slides)
+│   │   ├── pptx_export.py       # Markdown → PPTX presentation conversion (python-pptx, 4 themes, 6 layouts)
+│   │   └── unsplash.py          # Image search service (Unsplash → Bing → picsum fallback)
 │   └── tests/
 │       ├── test_routers.py      # Route endpoint tests
 │       ├── test_file_parser.py  # File parsing tests
@@ -61,25 +68,35 @@ my_first/
 ├── frontend/
 │   └── src/
 │       ├── main.tsx             # React entry point
-│       ├── App.tsx              # Root component: global state management, streaming call orchestration, dark mode, sidebar collapse
+│       ├── App.tsx              # Root component: global state, streaming, dark mode, auth, standard/long-form mode
 │       ├── App.css              # Global styles + dark mode variables + responsive media queries
+│       ├── index.css            # CSS design token system (122 custom properties + dark mode + shared animations + a11y)
 │       ├── components/
-│       │   ├── WritingForm.tsx   # Task selection tabs, text input (word count), file upload, style/language options, offline fallback
+│       │   ├── WritingForm.tsx   # Task selection, text input (word count/target), tone control, advanced options, quick-start
 │       │   ├── WritingForm.css   # Form styles + offline banner
-│       │   ├── ResultPanel.tsx   # Markdown rendering, editing, copying, multi-format export (Word/PDF/TXT/MD), comparison view
+│       │   ├── ResultPanel.tsx   # Markdown rendering, quick-start cards, word count progress, overflow menu, exports, comparison
 │       │   ├── ResultPanel.css   # Result panel styles + comparison view layout
-│       │   ├── HistoryPanel.tsx  # History list: search, filter, delete, clear (back-end API)
+│       │   ├── HistoryPanel.tsx  # History list: search, filter, style labels, delete, clear (back-end API)
+│       │   ├── AuthPanel.tsx     # User auth panel (login/register/logout)
+│       │   ├── AuthPanel.css     # Auth panel styles
+│       │   ├── QualityPanel.tsx  # Text quality scoring panel (4 dimensions, 0-100)
+│       │   ├── QualityPanel.css  # Scoring panel styles
+│       │   ├── LongFormPanel.tsx # Long-form chapter-based generation (outline → expand → merge)
+│       │   ├── LongFormPanel.css # Long-form panel styles
+│       │   ├── StyleEditor.tsx   # Custom style editor (CRUD)
+│       │   ├── StyleEditor.css   # Style editor styles
 │       │   ├── ConfirmDialog.tsx # Generic confirmation dialog component
 │       │   ├── ConfirmDialog.css # Confirmation dialog styles
-│       │   ├── SettingsPanel.tsx # Model name + temperature parameter settings panel
+│       │   ├── SettingsPanel.tsx # Model name + temperature + Provider info settings panel
 │       │   └── SettingsPanel.css # Settings panel styles
 │       ├── services/
-│       │   ├── api.ts           # Axios client + API functions (streaming/non-streaming/upload/export/health check)
-│       │   ├── history.ts       # Back-end history API wrapper (getHistory / addHistory / removeHistory / clearHistory)
+│       │   ├── api.ts           # Axios client + API functions (streaming/non-streaming/upload/export/custom style CRUD)
+│       │   ├── auth.ts          # JWT auth client (localStorage + Bearer injection)
+│       │   ├── history.ts       # Back-end history API wrapper (auto-injects Auth Header)
 │       │   └── templates.ts     # Prompt template management (save/load/delete, localStorage)
 │       └── types/
-│           └── index.ts         # TypeScript type definitions, TaskType constants, style/language options
-└── docs/                        # Documentation directory
+│           └── index.ts         # TypeScript type definitions, TaskType constants, style/language options, STYLE_LABELS
+└── docs/                        # Documentation directory (Chinese/English bilingual)
 ```
 
 ---
@@ -88,15 +105,17 @@ my_first/
 
 ### `main.py` — Application Entry Point
 
-- Creates a FastAPI instance (title `AI 写作助手`, version `1.3.1`)
+- Creates a FastAPI instance (title `AI 写作助手`, version `1.5.0`)
 - Uses a `lifespan` context manager to initialize the database on startup (`init_db()`)
 - Configures CORS middleware to allow cross-origin requests from the front-end dev server:
   - `http://localhost:5173` (Vite dev server)
   - `http://localhost:3000` (fallback port)
 - Mounts request logging middleware (`RequestLoggingMiddleware`) and IP rate-limiting middleware (`RateLimitMiddleware`)
-- Mounts writing routes `writing_router` under the prefix `/api/writing`
-- Mounts history routes `history_router` under the prefix `/api/history`
-- Provides a health-check endpoint `GET /api/health` that returns the service status and current model name
+- Mounts five route modules: `writing_router`, `history_router`, `styles_router`, `auth_router`, `analysis_router`
+- Provides a health-check endpoint `GET /api/health` that returns the service status, provider info, and current model name
+- Provides a model listing endpoint `GET /api/models` that returns all available models (auto-filters non-generation models)
+- Supports SPA mode: if `frontend/dist` exists, automatically serves static files with SPA fallback
+- Returns 404 for `/sw.js` to unregister stale Service Workers
 
 ### `db.py` — Database Configuration
 
@@ -125,28 +144,57 @@ my_first/
 
 SQLAlchemy ORM model `HistoryRecord`, mapped to the `history` table:
 
-| Field         | Type         | Description                |
-| ------------- | ------------ | -------------------------- |
-| `id`          | Integer (PK) | Auto-increment primary key |
-| `task_type`   | String       | Task type                  |
-| `content`     | Text         | Input content              |
-| `result`      | Text         | Generated result           |
-| `style`       | String       | Writing style              |
-| `token_count` | Integer      | Token count                |
-| `created_at`  | DateTime     | Creation timestamp (UTC)   |
+| Field         | Type         | Description                    |
+| ------------- | ------------ | ------------------------------ |
+| `id`          | Integer (PK) | Auto-increment primary key     |
+| `user_id`     | Integer (FK) | References users.id, nullable  |
+| `task_type`   | String       | Task type                      |
+| `content`     | Text         | Input content                  |
+| `result`      | Text         | Generated result               |
+| `style`       | String       | Writing style                  |
+| `token_count` | Integer      | Token count                    |
+| `created_at`  | DateTime     | Creation timestamp (UTC)       |
+
+### `models/user.py` — User ORM Model
+
+SQLAlchemy ORM model `User`, mapped to the `users` table:
+
+| Field             | Type         | Description                    |
+| ----------------- | ------------ | ------------------------------ |
+| `id`              | Integer (PK) | Auto-increment primary key     |
+| `username`        | String(64)   | Unique, indexed                |
+| `hashed_password` | String(128)  | bcrypt hash                    |
+| `created_at`      | DateTime     | Creation timestamp (UTC)       |
+
+### `models/custom_style.py` — Custom Style ORM Model
+
+SQLAlchemy ORM model `CustomStyle`, mapped to the `custom_styles` table:
+
+| Field             | Type         | Description                         |
+| ----------------- | ------------ | ----------------------------------- |
+| `id`              | Integer (PK) | Auto-increment primary key          |
+| `name`            | String(64)   | Display name                        |
+| `slug`            | String(64)   | Unique identifier (indexed)         |
+| `prompt_template` | Text         | Prompt template, must contain `{content}` |
+| `description`     | String(256)  | Description                         |
+| `created_at`      | DateTime     | Creation timestamp (UTC)            |
+| `updated_at`      | DateTime     | Last update timestamp (UTC)         |
 
 ### `routers/writing.py` — Writing API Routes
 
-Provides six core endpoints, all under the prefix `/api/writing`:
+Provides nine core endpoints, all under the prefix `/api/writing`:
 
-| Endpoint       | Method | Function                                                                                                                                   |
-| -------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `/upload`      | POST   | Receives an uploaded file, calls `file_parser.extract_text()` to extract text, returns filename, text content, and character count         |
-| `/process`     | POST   | Non-streaming writing processing; builds a prompt and calls `ollama_client.generate()`, returns the complete result                        |
-| `/stream`      | POST   | Streaming writing processing; returns tokens incrementally in SSE format. Poetry requests follow a special path                            |
-| `/export-docx` | POST   | Accepts Markdown text, converts to a Word document, returns as a binary stream                                                             |
-| `/export-pdf`  | POST   | Accepts Markdown text, converts to a PDF document (fpdf2, Chinese support), returns as a binary stream                                     |
-| `/export-pptx` | POST   | Accepts a Markdown PPT outline, converts to a PPTX presentation (supports theme templates and Unsplash images), returns as a binary stream |
+| Endpoint            | Method | Function                                                                                                                                   |
+| ------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `/upload`           | POST   | Receives an uploaded file, calls `file_parser.extract_text()` to extract text, returns filename, text content, and character count         |
+| `/process`          | POST   | Non-streaming writing processing; builds a prompt and calls `llm_provider.generate()`, returns the complete result                         |
+| `/stream`           | POST   | Streaming writing processing; returns tokens incrementally in SSE format. Poetry requests follow a special path                            |
+| `/refine`           | POST   | Streaming refinement of existing text; supports iterative improvements                                                                     |
+| `/outline`          | POST   | Streaming long-form outline generation; returns a structured chapter outline                                                                |
+| `/expand-chapter`   | POST   | Streaming chapter expansion; expands a single chapter from the outline into full content                                                    |
+| `/export-docx`      | POST   | Accepts Markdown text, converts to a Word document, returns as a binary stream                                                             |
+| `/export-pdf`       | POST   | Accepts Markdown text, converts to a PDF document (fpdf2, Chinese support), returns as a binary stream                                     |
+| `/export-pptx`      | POST   | Accepts a Markdown PPT outline, converts to a PPTX presentation (supports theme templates and Unsplash images), returns as a binary stream |
 
 ### `routers/history.py` — History Routes
 
@@ -158,6 +206,35 @@ Provides four CRUD endpoints, all under the prefix `/api/history`:
 | `/`      | POST   | Creates a new history record; returns 201                          |
 | `/{id}`  | DELETE | Deletes the history record with the specified ID; returns 204      |
 | `/`      | DELETE | Clears all history records; returns 204                            |
+
+### `routers/styles.py` — Custom Style Routes
+
+Provides full CRUD endpoints for custom writing styles, all under the prefix `/api/styles`:
+
+| Endpoint | Method | Function                                                           |
+| -------- | ------ | ------------------------------------------------------------------ |
+| `/`      | GET    | Retrieves all custom styles                                        |
+| `/`      | POST   | Creates a new custom style; returns 201                            |
+| `/{id}`  | PUT    | Updates the custom style with the specified ID                     |
+| `/{id}`  | DELETE | Deletes the custom style with the specified ID; returns 204        |
+
+### `routers/auth.py` — Authentication Routes
+
+Provides user registration and login endpoints, all under the prefix `/api/auth`:
+
+| Endpoint    | Method | Function                                                                           |
+| ----------- | ------ | ---------------------------------------------------------------------------------- |
+| `/register` | POST   | Registers a new user; validates username uniqueness, hashes password with bcrypt   |
+| `/login`    | POST   | User login; verifies credentials, returns JWT token (HS256, 72h expiry)           |
+| `/me`       | GET    | Returns current user info; requires valid Bearer token                             |
+
+### `routers/analysis.py` — Text Analysis Routes
+
+Provides text quality analysis endpoints, all under the prefix `/api/analysis`:
+
+| Endpoint   | Method | Function                                                                                     |
+| ---------- | ------ | -------------------------------------------------------------------------------------------- |
+| `/quality` | POST   | Accepts text content, returns a quality score (0-100) across 4 dimensions (algorithmic, no LLM) |
 
 ### `middleware/` — Middleware
 
@@ -196,17 +273,59 @@ Contains **9 prompt templates** covering a variety of writing scenarios:
 - `is_poetry_request()` — Regex-matches poetry-related keywords
 - `validate_poetry()` — Validates poetic meter (extracts Chinese characters, splits by punctuation into lines, checks character count per line)
 
-### `services/ollama_client.py` — Ollama Client
+### `services/llm_provider.py` — Multi-LLM Provider
 
-Communicates with the local Ollama service via httpx; default model is `qwen3.5:9b`, with support for custom model and temperature:
+Unified abstraction layer supporting multiple LLM providers; automatically selects the provider based on the `LLM_PROVIDER` environment variable:
 
-| Function                                      | Mode          | Description                                                                                                             |
-| --------------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `generate(prompt, model, temperature)`        | Non-streaming | Sends `POST /api/generate` (`stream=False`), returns the complete text and token count                                  |
-| `generate_stream(prompt, model, temperature)` | Streaming     | Sends `POST /api/generate` (`stream=True`), returns an `AsyncGenerator` that parses JSON line by line to extract tokens |
+| `LLM_PROVIDER` | Service             | Base URL                              | Default Model        |
+| --------------- | ------------------- | ------------------------------------- | -------------------- |
+| `ollama`        | Ollama (local)      | `http://localhost:11434`              | `qwen3.5:latest`     |
+| `openai`        | OpenAI API          | `https://api.openai.com/v1`          | `gpt-4o-mini`        |
+| `deepseek`      | DeepSeek API        | `https://api.deepseek.com/v1`        | `deepseek-chat`      |
+| `qwen`          | Qwen (Alibaba)      | `https://dashscope.aliyuncs.com/compatible-mode/v1` | `qwen-plus`    |
+| `glm`           | GLM (Zhipu AI)      | `https://open.bigmodel.cn/api/paas/v4` | `glm-4-flash`     |
+| `mm`            | MiniMax API         | `https://api.minimax.chat/v1`        | `MiniMax-Text-01`    |
 
-- Uniformly sets `think=False` to disable the model's chain-of-thought output
-- Timeout: 120 seconds
+**Core Functions**:
+
+| Function             | Mode          | Description                                                                        |
+| -------------------- | ------------- | ---------------------------------------------------------------------------------- |
+| `generate()`         | Non-streaming | Sends a chat completion request, returns complete text and token count              |
+| `generate_stream()`  | Streaming     | Sends a chat completion request, returns an `AsyncGenerator` that yields tokens    |
+| `list_models()`      | —             | Retrieves available model list from the provider                                   |
+| `get_default_model()`| —             | Returns the default model name for the current provider                            |
+| `get_provider_info()`| —             | Returns provider name and base URL information                                     |
+
+**Ollama-Specific Optimizations**:
+
+- Uses Chat API (`/api/chat`) instead of Generate API, converting prompts to `system` + `user` messages via `_prompt_to_messages()`
+- Model listing filters out non-generation models (embedding models, etc.)
+- Timeout: 300 seconds (longer for local inference)
+
+### `services/ollama_client.py` — Ollama Client (Legacy)
+
+Legacy client kept for the poetry validation path. Communicates with the local Ollama service via httpx:
+
+- Uses `/api/chat` (not `/api/generate`), converts prompt into `system` + `user` messages
+- Timeout: 300 seconds
+- Sets `think=False` to disable chain-of-thought output
+
+### `services/auth.py` — Authentication Service
+
+JWT-based user authentication service:
+
+- Password hashing: bcrypt via `passlib`
+- Token generation: HS256 algorithm, 72-hour expiry
+- Token verification: Decodes and validates JWT, returns the current user
+- Provides `get_current_user()` dependency for protected routes
+
+### `services/text_analysis.py` — Text Quality Analysis
+
+Algorithmic text quality scoring (no LLM required):
+
+- Accepts text content and returns a score from 0 to 100
+- Evaluates across 4 dimensions: readability, structure, vocabulary richness, and coherence
+- Pure algorithmic analysis — fast, deterministic, and free
 
 ### `services/file_parser.py` — File Parsing
 
@@ -344,7 +463,7 @@ The central hub for global state management and business logic orchestration:
 
 ### `services/api.ts` — API Client
 
-HTTP requests wrapped with Axios; base URL `http://localhost:8000`, timeout 120 seconds:
+HTTP requests wrapped with Axios; base URL configured via `VITE_API_BASE` env var (empty for same-origin proxy in dev mode), timeout 120 seconds:
 
 | Function                                                          | Description                                                                                                  |
 | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
@@ -364,7 +483,17 @@ Back-end API-based history management (data persisted in SQLite):
 
 - Provides four async functions: `getHistory()` / `addHistory()` / `removeHistory()` / `clearHistory()`
 - All operations call the `/api/history` endpoint via axios
+- Auto-injects Authorization Bearer token (if user is logged in)
 - History records are permanently retained, stored by the back-end SQLite database
+
+### `services/auth.ts` — Authentication Client
+
+JWT-based front-end authentication client:
+
+- Stores JWT token in `localStorage`
+- Provides `login()` / `register()` / `getMe()` / `logout()` functions
+- Automatically injects `Authorization: Bearer <token>` header into all API requests
+- Token is cleared on logout or 401 response
 
 ### `services/templates.ts` — Prompt Template Management
 
@@ -389,7 +518,8 @@ localStorage-based template persistence scheme:
   │                         │───────────────────────────►│                            │
   │                         │                            │  3. build_prompt()         │
   │                         │                            │  (选择模板+注入参数)        │
-  │                         │                            │  4. POST /api/generate     │
+  │                         │                            │  4. POST /api/chat       │
+  │                         │                            │  (system+user messages)  │
   │                         │                            │──────────────────────────►│
   │                         │     SSE: data: "token"     │  5. 逐行返回 JSON token    │
   │                         │◄───────────────────────────│◄──────────────────────────│
@@ -508,3 +638,11 @@ CSS custom properties (CSS Variables) are used for theme switching, controlled v
 ### 9. PPTX Export Strategy
 
 The back-end generates the `.pptx` file in memory without writing to disk. A Markdown outline format is used as an intermediate representation, which is parsed into structured slide data before generating the presentation. The AI Prompt instructs the LLM to embed `[layout: xxx]` layout markers in titles; the parser extracts these and dispatches to 6 specialized renderers (bullets, stats, comparison, timeline, quote, grid) to achieve diverse layouts. Four preset themes are differentiated by color schemes and font configurations, with automatic detection of cover, content, and closing slides. Unsplash / Bing image sourcing is optional — basic export is unaffected when no API key is provided.
+
+### 12. Multi-LLM Provider Architecture
+
+The `llm_provider.py` module implements a unified abstraction layer that supports 6 LLM providers (Ollama, OpenAI, DeepSeek, Qwen, GLM, MiniMax). Provider selection is controlled via the `LLM_PROVIDER` environment variable, with Ollama as the default. All providers expose the same `generate()` / `generate_stream()` interface, so the upper-layer business logic is completely decoupled from the specific provider. This design allows seamless switching between local and cloud LLM services without modifying any route or prompt code.
+
+### 13. User Authentication System
+
+JWT-based user authentication is implemented with bcrypt password hashing and HS256 token signing (72-hour expiry). The system is designed to be optional — all core writing features work without login. When authenticated, history records are isolated per user via a `user_id` foreign key, enabling multi-user data separation. The front-end stores the JWT in localStorage and automatically injects the Bearer token into API requests.

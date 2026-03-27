@@ -42,17 +42,12 @@
 .quality-error {
   margin-left: 10px;
   font-size: 13px;
-  color: #ef4444;
+  color: var(--color-error);
 }
 
 .quality-content {
   margin-top: 16px;
   animation: fadeIn 0.2s ease-out;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
 }
 
 /* Main score circle */

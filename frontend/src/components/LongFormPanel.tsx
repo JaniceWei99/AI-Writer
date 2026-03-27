@@ -83,7 +83,7 @@ export default function LongFormPanel({ model, temperature, online }: Props) {
   const [outline, setOutline] = useState('')
   const [editOutline, setEditOutline] = useState('')
   const [chapters, setChapters] = useState<Chapter[]>([])
-  const [currentChapter, setCurrentChapter] = useState(-1)
+  const [, setCurrentChapter] = useState(-1)
   const [fullArticle, setFullArticle] = useState('')
   const abortRef = useRef<AbortController | null>(null)
 
@@ -207,6 +207,7 @@ export default function LongFormPanel({ model, temperature, online }: Props) {
             onChange={(e) => setTopic(e.target.value)}
             placeholder="输入长文主题，例如：人工智能对教育行业的影响与未来趋势..."
             rows={3}
+            aria-label="长文主题输入"
           />
           <div className="longform-input-actions">
             <select
@@ -279,7 +280,7 @@ export default function LongFormPanel({ model, temperature, online }: Props) {
             ))}
           </div>
 
-          <div className="longform-result">
+          <div className="longform-result" aria-live="polite">
             <Markdown>{fullArticle}</Markdown>
             {phase === 'expanding' && <span className="cursor" />}
           </div>

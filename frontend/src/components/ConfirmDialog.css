@@ -53,10 +53,10 @@
 
 .confirm-ok {
   border: none;
-  background: #ef4444;
+  background: var(--color-error);
   color: #fff;
 }
 
 .confirm-ok:hover {
-  background: #dc2626;
+  background: var(--color-error-dark);
 }

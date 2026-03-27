@@ -20,7 +20,8 @@ services:
       - OLLAMA_BASE_URL=http://ollama:11434
       - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen3.5:9b}
       - CORS_ORIGINS=${CORS_ORIGINS:-*}
-      - DATABASE_URL=${DATABASE_URL:-}
+      # Only set DATABASE_URL if you want PostgreSQL; omit for default SQLite
+      # - DATABASE_URL=${DATABASE_URL}
     volumes:
       - app-data:/app/data    # persist SQLite database
     depends_on:
